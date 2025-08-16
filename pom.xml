@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.wmt</groupId>
-    <artifactId>wmt-ai-code</artifactId>
+    <artifactId>wmt-ai-code-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>wmt-ai-code</name>
     <description>wmt-ai-code</description>
