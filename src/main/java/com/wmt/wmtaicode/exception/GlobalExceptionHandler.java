@@ -2,12 +2,14 @@ package com.wmt.wmtaicode.exception;
 
 import com.wmt.wmtaicode.common.BaseResponse;
 import com.wmt.wmtaicode.common.ResultUtils;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @Slf4j
+@Hidden
 public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public BaseResponse<?> handleBusinessException(BusinessException e) {
