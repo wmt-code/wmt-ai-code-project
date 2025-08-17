@@ -18,55 +18,114 @@
         @click="handleMenuClick"
       />
       <div class="header-right">
-        <a-button type="primary" @click="handleLogin">登录</a-button>
+        <template v-if="loginUserStore.loginUser.id">
+          <a-dropdown :trigger="['hover']" placement="bottomRight">
+            <div class="user-avatar-wrapper">
+              <a-avatar :src="loginUserStore.loginUser.userAvatar" :size="36" class="user-avatar">
+                <template v-if="!loginUserStore.loginUser.userAvatar">
+                  {{ getAvatarText() }}
+                </template>
+              </a-avatar>
+              <span class="username">{{
+                loginUserStore.loginUser.userName || loginUserStore.loginUser.userAccount
+              }}</span>
+              <DownOutlined class="dropdown-icon" />
+            </div>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item key="profile" @click="goToProfile">
+                  <UserOutlined />
+                  个人中心
+                </a-menu-item>
+                <a-menu-divider />
+                <a-menu-item key="logout" @click="handleLogout">
+                  <LogoutOutlined />
+                  退出登录
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </template>
+        <template v-else>
+          <router-link to="/user/login">
+            <a-button type="primary">登录</a-button>
+          </router-link>
+        </template>
       </div>
     </div>
   </a-layout-header>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { health } from '@/api/healthController.ts'
+import { UserOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons-vue'
+import type { MenuProps } from 'ant-design-vue'
+import { useLoginUserStore } from '@/stores/loginUser'
+import { logout } from '@/api/userController'
+import { message } from 'ant-design-vue'
+
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 const selectedKeys = ref(['home'])
 
-const menuItems = [
+const originItems = [
   {
     key: '/',
     label: '首页',
     title: '首页',
   },
   {
-    key: 'projects',
-    label: '项目',
-    title: '项目',
-  },
-  {
-    key: 'ai-tools',
-    label: 'AI工具',
-    title: 'AI工具',
-  },
-  {
-    key: 'settings',
-    label: '设置',
-    title: '设置',
+    key: '/admin/userManage',
+    label: '用户管理',
+    title: '用户管理',
   },
 ]
-// 处理菜单点击
+
+// 过滤菜单项
+const filterMenus = (menus = [] as MenuProps['items']) => {
+  return menus?.filter((menu) => {
+    if (menu.key.startsWith('/admin')) {
+      const loginUser = loginUserStore.loginUser
+      if (!loginUser || loginUser.userRole !== 'admin') {
+        return false
+      }
+    }
+    return true
+  })
+}
+
+// 展示在菜单的路由数组
+const menuItems = computed<MenuProps['items']>(() => filterMenus(originItems))
+
+const getAvatarText = () => {
+  const userName = loginUserStore.loginUser.userName || loginUserStore.loginUser.userAccount || 'U'
+  return userName.charAt(0).toUpperCase()
+}
+
 const handleMenuClick: MenuProps['onClick'] = (e) => {
   const key = e.key as string
   selectedKeys.value = [key]
-  // 跳转到对应页面
   if (key.startsWith('/')) {
     router.push(key)
   }
 }
 
-const handleLogin = () => {
-  console.log('点击登录按钮')
-  // 这里可以跳转到登录页面
-  // router.push('/login')
+const goToProfile = () => {
+  router.push('/user/profile')
+}
+
+const handleLogout = async () => {
+  try {
+    const res = await logout()
+    if (res.data.code == 0 && res.data.data) {
+      loginUserStore.setLoginUser({})
+      message.success('已退出登录')
+      await router.push('/')
+    }
+  } catch (error: any) {
+    message.error(error.response?.data?.message || '退出登录失败')
+  }
 }
 
 const handleLogoError = (event: Event) => {
@@ -74,8 +133,8 @@ const handleLogoError = (event: Event) => {
   const target = event.target as HTMLImageElement
   target.style.display = 'none'
 }
-//监听路由变化，更新选中菜单项
-router.afterEach((to, from, next) => {
+
+router.afterEach((to) => {
   selectedKeys.value = [to.path]
 })
 </script>
@@ -158,6 +217,40 @@ router.afterEach((to, from, next) => {
 .header-right {
   display: flex;
   align-items: center;
+}
+
+.user-avatar-wrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin-left: 16px;
+}
+
+.user-avatar-wrapper:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar {
+  margin-right: 8px;
+  background-color: #1890ff;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.username {
+  margin-right: 8px;
+  font-weight: 500;
+  color: #fff;
+  font-size: 14px;
+}
+
+.dropdown-icon {
+  font-size: 12px;
+  color: #fff;
 }
 
 @media (max-width: 768px) {
