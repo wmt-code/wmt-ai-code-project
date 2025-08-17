@@ -1,12 +1,14 @@
 package com.wmt.wmtaicode.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.wmt.wmtaicode.annotation.AuthCheck;
 import com.wmt.wmtaicode.common.BaseResponse;
 import com.wmt.wmtaicode.common.DeleteRequest;
 import com.wmt.wmtaicode.common.ResultUtils;
 import com.wmt.wmtaicode.constant.UserConstant;
+import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.user.*;
@@ -128,6 +130,26 @@ public class UserController {
 		User user = new User();
 		user.setId(loginUser.getId());
 		BeanUtil.copyProperties(userUpdateSelfReq, user);
+		// 更新用户密码
+		String oldPassword = userUpdateSelfReq.getOldPassword();
+		String newPassword = userUpdateSelfReq.getNewPassword();
+		String confirmPassword = userUpdateSelfReq.getConfirmPassword();
+		if (StrUtil.isNotBlank(oldPassword)) {
+			if (StrUtil.hasBlank(newPassword, confirmPassword)) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码和确认密码不能为空");
+			}
+			if (newPassword.length() < 6 || newPassword.length() > 32) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码长度应为6~32位");
+			}
+			User dbuser = userService.getById(loginUser.getId());
+			if (!dbuser.getUserPassword().equals(userService.getEncPassword(oldPassword))) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码错误");
+			}
+			if (!newPassword.equals(confirmPassword)) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码和确认密码不一致");
+			}
+			user.setUserPassword(userService.getEncPassword(newPassword));
+		}
 		boolean update = userService.updateById(user);
 		ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "用户更新失败");
 		return ResultUtils.success(true);

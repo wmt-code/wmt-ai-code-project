@@ -12,4 +12,7 @@ public class UserUpdateSelfReq implements Serializable {
 	private String userName;
 	private String userAvatar;
 	private String userProfile;
+	private String oldPassword;
+	private String newPassword;
+	private String confirmPassword;
 }
