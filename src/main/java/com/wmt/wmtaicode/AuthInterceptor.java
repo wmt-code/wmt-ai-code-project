@@ -5,7 +5,7 @@ import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.enums.UserRoleEnum;
-import com.wmt.wmtaicode.model.vo.UserVo;
+import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +34,7 @@ public class AuthInterceptor {
 		ServletRequestAttributes requestAttributes =
 				(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 		HttpServletRequest request = requestAttributes.getRequest();
-		UserVo loginUser = userService.getLoginUser(request);
+		UserVO loginUser = userService.getLoginUser(request);
 		// 如果没有登录用户，则直接抛出异常
 		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
 		UserRoleEnum loginUserRole = UserRoleEnum.getEnumByValue(loginUser.getUserRole());
