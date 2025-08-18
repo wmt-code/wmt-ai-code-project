@@ -24,11 +24,11 @@ public class CodeFileSaveExecutor {
 	 * @param codeGenTypeEnum 代码生成类型枚举，指示代码的类型。
 	 * @return 保存后的文件对象。
 	 */
-	public static File executeSaveCode(Object codeResult, CodeGenTypeEnum codeGenTypeEnum) {
+	public static File executeSaveCode(Object codeResult, CodeGenTypeEnum codeGenTypeEnum,Long appId) {
 		ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR, "代码类型不能为空");
 		return switch (codeGenTypeEnum) {
-			case HTML -> htmlCodeSaveTemplate.saveCode((HTMLCodeResult) codeResult);
-			case MULTI_FILE -> mutiFileCodeFileSaveTemplate.saveCode((MultiFileCodeResult) codeResult);
+			case HTML -> htmlCodeSaveTemplate.saveCode((HTMLCodeResult) codeResult,appId);
+			case MULTI_FILE -> mutiFileCodeFileSaveTemplate.saveCode((MultiFileCodeResult) codeResult,appId);
 		};
 	}
 }

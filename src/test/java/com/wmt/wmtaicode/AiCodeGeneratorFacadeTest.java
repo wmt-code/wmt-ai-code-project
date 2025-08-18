@@ -19,12 +19,12 @@ class AiCodeGeneratorFacadeTest {
 
 	@Test
 	void generateAndSaveCode() {
-		File file = aiCodeGeneratorFacade.generateAndSaveCode("任务记录网站", CodeGenTypeEnum.MULTI_FILE);
+		File file = aiCodeGeneratorFacade.generateAndSaveCode("任务记录网站", CodeGenTypeEnum.MULTI_FILE,1L);
 	}
 
 	@Test
 	void generateAndSaveCodeStream() {
-		Flux<String> flux = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE);
+		Flux<String> flux = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE,1L);
 		List<String> result = flux.collectList().block();
 		Assertions.assertNotNull(result);
 		String join = String.join("", result);

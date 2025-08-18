@@ -5,6 +5,8 @@ import com.mybatisflex.core.service.IService;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.vo.AppVO;
+import jakarta.servlet.http.HttpServletRequest;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -21,4 +23,6 @@ public interface AppService extends IService<App> {
 	List<AppVO> getAppVOList(List<App> appList);
 
 	QueryWrapper getQueryWrapper(AppQueryReq appQueryReq);
+
+	Flux<String> chatToGenCode(Long appId, String chatMessage, HttpServletRequest request);
 }

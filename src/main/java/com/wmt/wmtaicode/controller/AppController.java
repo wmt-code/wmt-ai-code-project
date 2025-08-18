@@ -2,6 +2,7 @@ package com.wmt.wmtaicode.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
@@ -25,10 +26,15 @@ import com.wmt.wmtaicode.service.AppService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 应用表 控制层。
@@ -270,4 +276,37 @@ public class AppController {
 		return ResultUtils.success(appService.getAppVO(app));
 	}
 
+	/**
+	 * 与AI对话生成代码
+	 *
+	 * @param appId       应用ID
+	 * @param chatMessage 用户提示词
+	 * @param request     HttpServletRequest
+	 * @return 代码生成结果的Flux流
+	 */
+	@GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam("appId") Long appId,
+													   @RequestParam("chatMessage") String chatMessage,
+													   HttpServletRequest request) {
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
+		ThrowUtils.throwIf(StrUtil.isBlank(chatMessage), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
+		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, request);
+		// 额外封装成ServerSent Events,将原始数据放入json的d字段，解决空格问题
+		return contentFlux
+				.map(chunk -> {
+					Map<String, String> map = Map.of("d", chunk);
+					String jsonData = JSONUtil.toJsonStr(map);
+					return ServerSentEvent.<String>builder()
+							.data(jsonData)
+							.build();
+				}).concatWith(Mono.just(
+								// 发送完成事件
+								ServerSentEvent.<String>builder()
+										.event("done")
+										.data("")
+										.build()
+						)
+				)
+				;
+	}
 }

@@ -4,6 +4,8 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
+import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.mapper.AppMapper;
@@ -15,8 +17,10 @@ import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +38,8 @@ import java.util.stream.Collectors;
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
 	@Resource
 	private UserService userService;
-
+	@Resource
+	private AiCodeGeneratorFacade aiCodeGeneratorFacade;
 
 	@Override
 	public AppVO getAppVO(App app) {
@@ -95,5 +100,20 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 				.eq(App::getPriority, priority)
 				.eq(App::getUserId, userId)
 				.orderBy(sortField, "ascend".equalsIgnoreCase(sortOrder));
+	}
+
+	@Override
+	public Flux<String> chatToGenCode(Long appId, String chatMessage, HttpServletRequest request) {
+		ThrowUtils.throwIf(appId == null, ErrorCode.PARAMS_ERROR, "应用ID不能为空");
+		ThrowUtils.throwIf(chatMessage == null || chatMessage.isBlank(), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
+		App app = this.getById(appId);
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+		UserVO loginUser = userService.getLoginUser(request);
+		ThrowUtils.throwIf(!app.getUserId().equals(loginUser.getId()), ErrorCode.NO_AUTH_ERROR, "无权限访问该应用");
+		String codeGenType = app.getCodeGenType();
+		CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getByValue(codeGenType);
+		ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR, "不支持的代码生成类型");
+		// 调用AI代码生成器生成代码
+		return aiCodeGeneratorFacade.generateAndSaveCodeStream(chatMessage, codeGenTypeEnum, appId);
 	}
 }

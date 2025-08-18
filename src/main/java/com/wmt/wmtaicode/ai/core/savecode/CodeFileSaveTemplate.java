@@ -1,7 +1,6 @@
 package com.wmt.wmtaicode.ai.core.savecode;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.exception.ErrorCode;
@@ -19,11 +18,18 @@ public abstract class CodeFileSaveTemplate<T> {
 	// 文件保存的根目录
 	private static final String ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
 
-	public final File saveCode(T result) {
+	/**
+	 * 保存生成的代码到文件系统中(通过appId关联应用)
+	 *
+	 * @param result 生成的代码结果
+	 * @param appId 应用ID，用于关联生成的代码
+	 * @return 保存的文件目录
+	 */
+	public final File saveCode(T result, Long appId) {
 		// 验证输入
 		validateInput(result);
 		// 生成唯一路径
-		String baseDir = buildUniqueDir();
+		String baseDir = buildUniqueDir(appId);
 		// 保存文件
 		saveFiles(baseDir, result);
 		// 返回保存的目录
@@ -41,8 +47,8 @@ public abstract class CodeFileSaveTemplate<T> {
 	}
 
 
-	protected final String buildUniqueDir() {
-		String uniqueDir = StrUtil.format("{}_{}", getCodeGenTypeEnum().getValue(), IdUtil.getSnowflakeNextId());
+	protected final String buildUniqueDir(Long appId) {
+		String uniqueDir = StrUtil.format("{}_{}", getCodeGenTypeEnum().getValue(), appId);
 		String dirPath = ROOT_DIR + File.separator + uniqueDir;
 		// 创建目录
 		FileUtil.mkdir(dirPath);
