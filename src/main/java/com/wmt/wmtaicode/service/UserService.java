@@ -6,7 +6,7 @@ import com.wmt.wmtaicode.model.dto.user.UserLoginReq;
 import com.wmt.wmtaicode.model.dto.user.UserQueryReq;
 import com.wmt.wmtaicode.model.dto.user.UserRegisterReq;
 import com.wmt.wmtaicode.model.entity.User;
-import com.wmt.wmtaicode.model.vo.UserVo;
+import com.wmt.wmtaicode.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -33,15 +33,15 @@ public interface UserService extends IService<User> {
 	 * @param userLoginReq 用户登录请求
 	 * @return 用户信息
 	 */
-	UserVo userLogin(UserLoginReq userLoginReq, HttpServletRequest request);
+	UserVO userLogin(UserLoginReq userLoginReq, HttpServletRequest request);
 
 	String getEncPassword(String userPassword);
 
 	QueryWrapper getQueryWrapper(UserQueryReq userQueryReq);
 
-	UserVo getUserVo(User user);
+	UserVO getUserVo(User user);
 
-	UserVo getLoginUser(HttpServletRequest request);
+	UserVO getLoginUser(HttpServletRequest request);
 
 	/**
 	 * 用户注销
@@ -51,5 +51,5 @@ public interface UserService extends IService<User> {
 	 */
 	boolean logout(HttpServletRequest request);
 
-	List<UserVo> getUserVoList(List<User> userList);
+	List<UserVO> getUserVoList(List<User> userList);
 }

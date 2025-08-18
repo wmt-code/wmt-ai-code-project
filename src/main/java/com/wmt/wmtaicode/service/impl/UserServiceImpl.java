@@ -16,7 +16,7 @@ import com.wmt.wmtaicode.model.dto.user.UserQueryReq;
 import com.wmt.wmtaicode.model.dto.user.UserRegisterReq;
 import com.wmt.wmtaicode.model.entity.User;
 import com.wmt.wmtaicode.model.enums.UserRoleEnum;
-import com.wmt.wmtaicode.model.vo.UserVo;
+import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
@@ -65,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	}
 
 	@Override
-	public UserVo userLogin(UserLoginReq userLoginReq, HttpServletRequest request) {
+	public UserVO userLogin(UserLoginReq userLoginReq, HttpServletRequest request) {
 		String userAccount = userLoginReq.getUserAccount();
 		String userPassword = userLoginReq.getUserPassword();
 		if (StrUtil.hasBlank(userAccount, userPassword)) {
@@ -97,7 +97,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	}
 
 	@Override
-	public UserVo getLoginUser(HttpServletRequest request) {
+	public UserVO getLoginUser(HttpServletRequest request) {
 		User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 		ThrowUtils.throwIf(user == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
 		// 返回用户信息
@@ -114,6 +114,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
 		return true;
 	}
+
 	@Override
 	public QueryWrapper getQueryWrapper(UserQueryReq userQueryReq) {
 		ThrowUtils.throwIf(userQueryReq == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
@@ -130,21 +131,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 				.like(User::getUserProfile, userProfile)
 				.eq(User::getUserRole, userRole)
 				.like(User::getUserAccount, userAccount)
-				.orderBy(sortField, sortOrder);
+				.orderBy(sortField, "ascend".equalsIgnoreCase(sortOrder));
 	}
 
 	@Override
-	public UserVo getUserVo(User user) {
+	public UserVO getUserVo(User user) {
 		if (user == null) {
 			return null;
 		}
-		UserVo userVo = new UserVo();
+		UserVO userVo = new UserVO();
 		BeanUtil.copyProperties(user, userVo);
 		return userVo;
 	}
 
 	@Override
-	public List<UserVo> getUserVoList(List<User> userList) {
+	public List<UserVO> getUserVoList(List<User> userList) {
 		if (CollUtil.isEmpty(userList)) {
 			return Collections.emptyList();
 		}

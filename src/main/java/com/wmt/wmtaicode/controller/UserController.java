@@ -13,13 +13,15 @@ import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.user.*;
 import com.wmt.wmtaicode.model.entity.User;
-import com.wmt.wmtaicode.model.vo.UserVo;
+import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.FileService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
 
 /**
  * 用户 控制层。
@@ -42,13 +44,13 @@ public class UserController {
 	}
 
 	@PostMapping("/login")
-	public BaseResponse<UserVo> userLogin(@RequestBody UserLoginReq userLoginReq, HttpServletRequest request) {
+	public BaseResponse<UserVO> userLogin(@RequestBody UserLoginReq userLoginReq, HttpServletRequest request) {
 		ThrowUtils.throwIf(userLoginReq == null, ErrorCode.PARAMS_ERROR);
 		return ResultUtils.success(userService.userLogin(userLoginReq, request));
 	}
 
 	@GetMapping("/get/login")
-	public BaseResponse<UserVo> getLoginUser(HttpServletRequest request) {
+	public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
 		return ResultUtils.success(userService.getLoginUser(request));
 	}
 
@@ -82,7 +84,7 @@ public class UserController {
 	}
 
 	@GetMapping("/get/vo")
-	public BaseResponse<UserVo> getUserVoById(Long id) {
+	public BaseResponse<UserVO> getUserVoById(Long id) {
 		ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR, "用户id不能为空");
 		User user = userService.getById(id);
 		ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
@@ -111,12 +113,12 @@ public class UserController {
 
 	@PostMapping("/list/page/vo")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public BaseResponse<Page<UserVo>> listUserVoByPage(@RequestBody UserQueryReq userQueryReq) {
+	public BaseResponse<Page<UserVO>> listUserVoByPage(@RequestBody UserQueryReq userQueryReq) {
 		ThrowUtils.throwIf(userQueryReq == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
 		int pageSize = userQueryReq.getPageSize();
 		int current = userQueryReq.getCurrent();
 		Page<User> userPage = userService.page(Page.of(current, pageSize), userService.getQueryWrapper(userQueryReq));
-		Page<UserVo> userVoPage = new Page<>(userPage.getPageNumber(), userPage.getPageSize(), userPage.getTotalRow());
+		Page<UserVO> userVoPage = new Page<>(userPage.getPageNumber(), userPage.getPageSize(), userPage.getTotalRow());
 		userVoPage.setRecords(userService.getUserVoList(userPage.getRecords()));
 		return ResultUtils.success(userVoPage);
 	}
@@ -125,7 +127,7 @@ public class UserController {
 	public BaseResponse<Boolean> updateSelf(@RequestBody UserUpdateSelfReq userUpdateSelfReq,
 											HttpServletRequest request) {
 		ThrowUtils.throwIf(userUpdateSelfReq == null, ErrorCode.PARAMS_ERROR);
-		UserVo loginUser = userService.getLoginUser(request);
+		UserVO loginUser = userService.getLoginUser(request);
 		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
 		User user = new User();
 		user.setId(loginUser.getId());
@@ -150,6 +152,7 @@ public class UserController {
 			}
 			user.setUserPassword(userService.getEncPassword(newPassword));
 		}
+		user.setEditTime(LocalDateTime.now());
 		boolean update = userService.updateById(user);
 		ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "用户更新失败");
 		return ResultUtils.success(true);
@@ -158,7 +161,7 @@ public class UserController {
 	@PostMapping("/uploadAvatar")
 	public BaseResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
 		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
-		UserVo loginUser = userService.getLoginUser(request);
+		UserVO loginUser = userService.getLoginUser(request);
 		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
 		String avatarUrl = fileService.uploadFile(file, "avatar");
 		return ResultUtils.success(avatarUrl);
