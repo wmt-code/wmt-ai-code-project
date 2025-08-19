@@ -65,7 +65,6 @@ public class App implements Serializable {
 	 */
 	@Column("deployKey")
 	private String deployKey;
-
 	/**
 	 * 应用部署日期
 	 */

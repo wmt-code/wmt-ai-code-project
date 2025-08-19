@@ -3,6 +3,7 @@ package com.wmt.wmtaicode.ai.core.savecode;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
+import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 
@@ -16,13 +17,13 @@ import java.io.File;
  */
 public abstract class CodeFileSaveTemplate<T> {
 	// 文件保存的根目录
-	private static final String ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+	private static final String ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
 	/**
 	 * 保存生成的代码到文件系统中(通过appId关联应用)
 	 *
 	 * @param result 生成的代码结果
-	 * @param appId 应用ID，用于关联生成的代码
+	 * @param appId  应用ID，用于关联生成的代码
 	 * @return 保存的文件目录
 	 */
 	public final File saveCode(T result, Long appId) {

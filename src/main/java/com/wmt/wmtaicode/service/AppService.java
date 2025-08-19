@@ -2,6 +2,7 @@ package com.wmt.wmtaicode.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
+import com.wmt.wmtaicode.model.dto.app.AppDeployReq;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.vo.AppVO;
@@ -25,4 +26,6 @@ public interface AppService extends IService<App> {
 	QueryWrapper getQueryWrapper(AppQueryReq appQueryReq);
 
 	Flux<String> chatToGenCode(Long appId, String chatMessage, HttpServletRequest request);
+
+	String deployApp(AppDeployReq appDeployReq, HttpServletRequest request);
 }

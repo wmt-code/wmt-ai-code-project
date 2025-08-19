@@ -2,13 +2,20 @@ package com.wmt.wmtaicode.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
+import com.wmt.wmtaicode.constant.AppConstant;
+import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.mapper.AppMapper;
+import com.wmt.wmtaicode.model.dto.app.AppDeployReq;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.entity.User;
@@ -22,6 +29,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +51,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	private AiCodeGeneratorFacade aiCodeGeneratorFacade;
 
 	@Override
+
 	public AppVO getAppVO(App app) {
 		if (app == null) {
 			return null;
@@ -115,5 +125,48 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR, "不支持的代码生成类型");
 		// 调用AI代码生成器生成代码
 		return aiCodeGeneratorFacade.generateAndSaveCodeStream(chatMessage, codeGenTypeEnum, appId);
+	}
+
+	/**
+	 * 应用部署
+	 */
+	@Override
+	public String deployApp(AppDeployReq appDeployReq, HttpServletRequest request) {
+		Long appId = appDeployReq.getAppId();
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
+		App app = this.getById(appId);
+		// 判断应用是否存在
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+		// 校验权限
+		UserVO loginUser = userService.getLoginUser(request);
+		ThrowUtils.throwIf(!app.getUserId().equals(loginUser.getId()), ErrorCode.NO_AUTH_ERROR, "无权限访问该应用");
+		String deployKey = app.getDeployKey();
+		if (StrUtil.isBlank(deployKey)) {
+			// 生成16位随机字符串作为部署标识
+			deployKey = RandomUtil.randomString(16);
+		}
+		// 获取应用生成的代码目录
+		String codeGenType = app.getCodeGenType();
+		String sourceDirName = codeGenType + "_" + appId;
+		String sourceDir = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+		// 检查目录是否存在
+		File sourceDirFile = new File(sourceDir);
+		ThrowUtils.throwIf(!sourceDirFile.exists() || !sourceDirFile.isDirectory(), ErrorCode.NOT_FOUND_ERROR,
+				"应用代码目录不存在");
+		// 复制代码到部署目录
+		String deployDir = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
+		try {
+			FileUtil.copyContent(sourceDirFile, new File(deployDir), true);
+		} catch (IORuntimeException e) {
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
+		}
+		// 更新应用部署信息
+		App updateApp = new App();
+		updateApp.setId(appId);
+		updateApp.setDeployKey(deployKey);
+		updateApp.setDeployTime(LocalDateTime.now());
+		boolean res = this.updateById(updateApp);
+		ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "应用部署失败");
+		return String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
 	}
 }

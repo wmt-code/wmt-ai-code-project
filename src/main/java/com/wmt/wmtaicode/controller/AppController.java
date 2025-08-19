@@ -15,10 +15,7 @@ import com.wmt.wmtaicode.constant.UserConstant;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
-import com.wmt.wmtaicode.model.dto.app.AppAddReq;
-import com.wmt.wmtaicode.model.dto.app.AppAdminUpdateReq;
-import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
-import com.wmt.wmtaicode.model.dto.app.AppUpdateReq;
+import com.wmt.wmtaicode.model.dto.app.*;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
@@ -308,5 +305,20 @@ public class AppController {
 						)
 				)
 				;
+	}
+
+	/**
+	 * 应用部署
+	 *
+	 * @param appDeployReq 应用部署请求
+	 * @param request      HttpServletRequest
+	 * @return 部署结果的URL
+	 */
+	@PostMapping("/deploy")
+	public BaseResponse<String> deployApp(@RequestBody AppDeployReq appDeployReq, HttpServletRequest request) {
+		Long appId = appDeployReq.getAppId();
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
+		String url = appService.deployApp(appDeployReq, request);
+		return ResultUtils.success(url);
 	}
 }

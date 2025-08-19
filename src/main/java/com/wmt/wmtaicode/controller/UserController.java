@@ -13,6 +13,7 @@ import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.user.*;
 import com.wmt.wmtaicode.model.entity.User;
+import com.wmt.wmtaicode.model.enums.FileTypeEnum;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.FileService;
 import com.wmt.wmtaicode.service.UserService;
@@ -163,7 +164,7 @@ public class UserController {
 		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
 		UserVO loginUser = userService.getLoginUser(request);
 		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
-		String avatarUrl = fileService.uploadFile(file, "avatar");
+		String avatarUrl = fileService.uploadFile(file, "avatar", FileTypeEnum.IMAGE);
 		return ResultUtils.success(avatarUrl);
 	}
 }
