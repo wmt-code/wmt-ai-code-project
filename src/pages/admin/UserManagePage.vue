@@ -372,6 +372,7 @@ const fetchUserList = async () => {
       userRole: searchForm.userRole || undefined,
       current: paginationConfig.current,
       pageSize: paginationConfig.pageSize,
+      sortField: 'createTime',
     }
 
     const res = await listUserVoByPage(params)

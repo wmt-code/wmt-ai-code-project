@@ -250,7 +250,7 @@ const handleAvatarUpload = async ({ file }: any) => {
       formState.userAvatar = res.data.data
       message.success('头像上传成功')
     } else {
-      message.error(result.message || '头像上传失败')
+      message.error(res.data.message || '头像上传失败')
     }
   } catch (error: any) {
     message.error(error.message || '头像上传失败')
@@ -308,11 +308,11 @@ const beforeUpload = (file: any) => {
   if (!isJpgOrPng) {
     message.error('不支持上传该格式的图片，推荐 jpg 或 png')
   }
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    message.error('不能上传超过 2M 的图片')
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    message.error('不能上传超过 5M 的图片')
   }
-  return isJpgOrPng && isLt2M
+  return isJpgOrPng && isLt5M
 }
 
 onMounted(() => {

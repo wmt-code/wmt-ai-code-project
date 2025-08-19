@@ -161,7 +161,7 @@ export async function uploadAvatar(
     }
   })
 
-  return request<API.BaseResponsePictureVO>('/user/uploadAvatar', {
+  return request('/user/uploadAvatar', {
     method: 'POST',
     data: formData,
     requestType: 'form',
