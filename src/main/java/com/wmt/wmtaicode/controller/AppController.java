@@ -17,15 +17,18 @@ import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.app.*;
 import com.wmt.wmtaicode.model.entity.App;
+import com.wmt.wmtaicode.model.enums.FileTypeEnum;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
+import com.wmt.wmtaicode.service.FileService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -46,6 +49,8 @@ public class AppController {
 	private UserService userService;
 	@Resource
 	private AppService appService;
+	@Resource
+	private FileService fileService;
 
 	/**
 	 * 添加应用
@@ -131,8 +136,8 @@ public class AppController {
 	 * @param id 应用ID
 	 * @return 应用信息
 	 */
-	@GetMapping("/get/vo/{id}")
-	public BaseResponse<AppVO> getApp(@PathVariable("id") Long id) {
+	@GetMapping("/get/vo")
+	public BaseResponse<AppVO> getAppVoById(Long id) {
 		if (id == null || id <= 0) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
@@ -287,7 +292,8 @@ public class AppController {
 													   HttpServletRequest request) {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
 		ThrowUtils.throwIf(StrUtil.isBlank(chatMessage), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
-		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, request);
+		UserVO loginUser = userService.getLoginUser(request);// 确保用户已登录
+		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, loginUser);
 		// 额外封装成ServerSent Events,将原始数据放入json的d字段，解决空格问题
 		return contentFlux
 				.map(chunk -> {
@@ -320,5 +326,20 @@ public class AppController {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
 		String url = appService.deployApp(appDeployReq, request);
 		return ResultUtils.success(url);
+	}
+
+	/**
+	 * 上传应用封面图片
+	 * @param file
+	 * @param request
+	 * @return
+	 */
+	@PostMapping("/uploadAppCover")
+	public BaseResponse<String> uploadAppCover(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
+		UserVO loginUser = userService.getLoginUser(request);
+		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
+		String coverUrl = fileService.uploadFile(file, "appCover", FileTypeEnum.IMAGE);
+		return ResultUtils.success(coverUrl);
 	}
 }

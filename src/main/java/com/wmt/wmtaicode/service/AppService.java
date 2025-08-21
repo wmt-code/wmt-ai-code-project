@@ -6,6 +6,7 @@ import com.wmt.wmtaicode.model.dto.app.AppDeployReq;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.vo.AppVO;
+import com.wmt.wmtaicode.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Flux;
 
@@ -25,7 +26,7 @@ public interface AppService extends IService<App> {
 
 	QueryWrapper getQueryWrapper(AppQueryReq appQueryReq);
 
-	Flux<String> chatToGenCode(Long appId, String chatMessage, HttpServletRequest request);
+	Flux<String> chatToGenCode(Long appId, String chatMessage, UserVO loginUser);
 
 	String deployApp(AppDeployReq appDeployReq, HttpServletRequest request);
 }

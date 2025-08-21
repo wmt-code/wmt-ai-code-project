@@ -113,12 +113,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	}
 
 	@Override
-	public Flux<String> chatToGenCode(Long appId, String chatMessage, HttpServletRequest request) {
+	public Flux<String> chatToGenCode(Long appId, String chatMessage, UserVO loginUser) {
 		ThrowUtils.throwIf(appId == null, ErrorCode.PARAMS_ERROR, "应用ID不能为空");
 		ThrowUtils.throwIf(chatMessage == null || chatMessage.isBlank(), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
 		App app = this.getById(appId);
 		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
-		UserVO loginUser = userService.getLoginUser(request);
 		ThrowUtils.throwIf(!app.getUserId().equals(loginUser.getId()), ErrorCode.NO_AUTH_ERROR, "无权限访问该应用");
 		String codeGenType = app.getCodeGenType();
 		CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getByValue(codeGenType);
