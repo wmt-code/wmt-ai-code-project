@@ -22,21 +22,21 @@
             />
           </a-form-item>
 
-          <a-form-item
-            v-if="isAdmin"
-            label="应用封面"
-            name="cover"
-            extra="支持图片链接，建议尺寸：400x300"
-          >
-            <a-input v-model:value="formData.cover" placeholder="请输入封面图片链接" />
-            <div v-if="formData.cover" class="cover-preview">
-              <a-image
-                :src="formData.cover"
-                :width="200"
-                :height="150"
-                fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-              />
-            </div>
+          <a-form-item label="应用封面" name="cover">
+            <a-upload
+              name="cover"
+              list-type="picture-card"
+              :show-upload-list="false"
+              :before-upload="beforeUpload"
+              :custom-request="handleUploadCover"
+            >
+              <img v-if="formData.cover" :src="formData.cover" alt="应用封面" class="cover" />
+              <div v-else>
+                <loading-outlined v-if="coverLoading"></loading-outlined>
+                <plus-outlined v-else></plus-outlined>
+                <div class="ant-upload-text">上传封面</div>
+              </div>
+            </a-upload>
           </a-form-item>
 
           <a-form-item v-if="isAdmin" label="优先级" name="priority" extra="设置为100表示精选应用">
@@ -117,16 +117,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { getAppVoById, updateApp, updateAppByAdmin } from '@/api/appController'
+import { getAppVoById, updateApp, updateAppByAdmin, uploadAppCover } from '@/api/appController'
 import { formatCodeGenType } from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import UserInfo from '@/components/UserInfo.vue'
 import { getStaticPreviewUrl } from '@/config/env'
-import type { FormInstance } from 'ant-design-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -135,6 +135,7 @@ const loginUserStore = useLoginUserStore()
 // 应用信息
 const appInfo = ref<API.AppVO>()
 const loading = ref(false)
+const coverLoading = ref(false)
 const submitting = ref(false)
 const formRef = ref<FormInstance>()
 
@@ -159,7 +160,6 @@ const rules = {
     { required: true, message: '请输入应用名称', trigger: 'blur' },
     { min: 1, max: 50, message: '应用名称长度在1-50个字符', trigger: 'blur' },
   ],
-  cover: [{ type: 'url', message: '请输入有效的URL', trigger: 'blur' }],
   priority: [{ type: 'number', min: 0, max: 99, message: '优先级范围0-99', trigger: 'blur' }],
 }
 
@@ -267,6 +267,45 @@ const openPreview = () => {
     window.open(url, '_blank')
   }
 }
+//上传图片封面
+const handleUploadCover = async ({ file }: any) => {
+  try {
+    coverLoading.value = true
+    const res = await uploadAppCover({}, file as File)
+    if (res.data.code == 0 && res.data.data) {
+      formData.cover = res.data.data
+      message.success('图片封面上传成功')
+      coverLoading.value = false
+    } else {
+      message.error(res.data.message || '图片封面上传失败')
+      coverLoading.value = false
+    }
+  } catch (error: any) {
+    message.error(error.message || '图片封面上传失败')
+    coverLoading.value = false
+  }
+}
+
+/**
+ * 上传前校验
+ * @param file
+ */
+const beforeUpload = (file: any) => {
+  const isJpgOrPng =
+    file.type === 'image/jpeg' ||
+    file.type === 'image/png' ||
+    file.type === 'image/webp' ||
+    file.type === 'image/bmp' ||
+    file.type === 'image/gif'
+  if (!isJpgOrPng) {
+    message.error('不支持上传该格式的图片，推荐 jpg 或 png')
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    message.error('不能上传超过 5M 的图片')
+  }
+  return isJpgOrPng && isLt5M
+}
 
 // 页面加载时获取应用信息
 onMounted(() => {
@@ -319,5 +358,24 @@ onMounted(() => {
 :deep(.ant-descriptions-item-label) {
   background: #fafafa;
   font-weight: 500;
+}
+:deep(.avatar-uploader > .ant-upload) {
+  width: 128px;
+  height: 128px;
+}
+:deep(.ant-upload-select-picture-card i) {
+  font-size: 32px;
+  color: #999;
+}
+
+:deep(.ant-upload-select-picture-card .ant-upload-text) {
+  margin-top: 8px;
+  color: #666;
+}
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
 }
 </style>

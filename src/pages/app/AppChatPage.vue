@@ -188,7 +188,6 @@ const hasInitialConversation = ref(false) // 标记是否已经进行过初始�
 // 预览相关
 const previewUrl = ref('')
 const previewReady = ref(false)
-
 // 部署相关
 const deploying = ref(false)
 const deployModalVisible = ref(false)
@@ -235,6 +234,10 @@ const fetchAppInfo = async () => {
         hasInitialConversation.value = true
         await sendInitialMessage(appInfo.value.initPrompt)
       }
+      previewUrl.value = getStaticPreviewUrl(
+        appInfo.value.codeGenType || CodeGenTypeEnum.HTML,
+        appId.value,
+      )
     } else {
       message.error('获取应用信息失败')
       router.push('/')

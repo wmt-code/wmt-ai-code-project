@@ -61,12 +61,12 @@
           {{ formatCodeGenType(record.codeGenType) }}
         </template>
         <template v-else-if="column.dataIndex === 'priority'">
-          <a-tag v-if="record.priority === 99" color="gold">精选</a-tag>
+          <a-tag v-if="record.priority === 100" color="gold">精选</a-tag>
           <span v-else>{{ record.priority || 0 }}</span>
         </template>
-        <template v-else-if="column.dataIndex === 'deployedTime'">
-          <span v-if="record.deployedTime">
-            {{ formatTime(record.deployedTime) }}
+        <template v-else-if="column.dataIndex === 'deployTime'">
+          <span v-if="record.deployTime">
+            {{ formatTime(record.deployTime) }}
           </span>
           <span v-else class="text-gray">未部署</span>
         </template>
@@ -83,9 +83,9 @@
               type="default"
               size="small"
               @click="toggleFeatured(record)"
-              :class="{ 'featured-btn': record.priority === 99 }"
+              :class="{ 'featured-btn': record.priority === 100 }"
             >
-              {{ record.priority === 99 ? '取消精选' : '精选' }}
+              {{ record.priority === 100 ? '取消精选' : '精选' }}
             </a-button>
             <a-popconfirm title="确定要删除这个应用吗？" @confirm="deleteApp(record.id)">
               <a-button danger size="small">删除</a-button>
@@ -143,7 +143,7 @@ const columns = [
   },
   {
     title: '部署时间',
-    dataIndex: 'deployedTime',
+    dataIndex: 'deployTime',
     width: 160,
   },
   {
