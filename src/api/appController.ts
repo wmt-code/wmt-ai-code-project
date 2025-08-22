@@ -30,7 +30,7 @@ export async function deleteAppByAdmin(body: API.DeleteRequest, options?: { [key
 export async function getAppVoByIdByAdmin(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getAppVOByIdByAdminParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseAppVO>('/app/admin/get/vo', {
     method: 'GET',
@@ -44,7 +44,7 @@ export async function getAppVoByIdByAdmin(
 /** 此处后端没有提供注释 POST /app/admin/list/page/vo */
 export async function listAppVoByPageByAdmin(
   body: API.AppQueryReq,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.BaseResponsePageAppVO>('/app/admin/list/page/vo', {
     method: 'POST',
@@ -59,7 +59,7 @@ export async function listAppVoByPageByAdmin(
 /** 此处后端没有提供注释 POST /app/admin/update */
 export async function updateAppByAdmin(
   body: API.AppAdminUpdateReq,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseBoolean>('/app/admin/update', {
     method: 'POST',
@@ -75,7 +75,7 @@ export async function updateAppByAdmin(
 export async function chatToGenCode(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.chatToGenCodeParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.ServerSentEventString[]>('/app/chat/gen/code', {
     method: 'GET',
@@ -114,7 +114,7 @@ export async function deployApp(body: API.AppDeployReq, options?: { [key: string
 export async function getAppVoById(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getAppVoByIdParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseAppVO>('/app/get/vo', {
     method: 'GET',
@@ -162,38 +162,13 @@ export async function updateApp(body: API.AppUpdateReq, options?: { [key: string
 }
 
 /** 此处后端没有提供注释 POST /app/uploadAppCover */
-export async function uploadAppCover(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  body: {},
-  file?: File,
-  options?: { [key: string]: any },
-) {
-  const formData = new FormData()
-
-  if (file) {
-    formData.append('file', file)
-  }
-
-  Object.keys(body).forEach((ele) => {
-    const item = (body as any)[ele]
-
-    if (item !== undefined && item !== null) {
-      if (typeof item === 'object' && !(item instanceof File)) {
-        if (item instanceof Array) {
-          item.forEach((f) => formData.append(ele, f || ''))
-        } else {
-          formData.append(ele, JSON.stringify(item))
-        }
-      } else {
-        formData.append(ele, item)
-      }
-    }
-  })
-
-  return request('/app/uploadAppCover', {
+export async function uploadAppCover(body: {}, options?: { [key: string]: any }) {
+  return request<API.BaseResponseString>('/app/uploadAppCover', {
     method: 'POST',
-    data: formData,
-    requestType: 'form',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }
