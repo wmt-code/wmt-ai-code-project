@@ -11,7 +11,7 @@ import java.util.Map;
 public class Codegen {
 	// 定义表名
 	private static final String[] TABLES = {
-			"user",
+			"chat_history",
 	};
 
 	public static void main(String[] args) {

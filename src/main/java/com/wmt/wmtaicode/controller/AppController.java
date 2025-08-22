@@ -16,19 +16,25 @@ import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.app.*;
+import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.enums.FileTypeEnum;
+import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
+import com.wmt.wmtaicode.service.ChatHistoryService;
 import com.wmt.wmtaicode.service.FileService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.View;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,6 +48,7 @@ import java.util.Map;
  * @author ethereal
  * @since 2025-08-18
  */
+@Slf4j
 @RestController
 @RequestMapping("/app")
 public class AppController {
@@ -51,6 +58,10 @@ public class AppController {
 	private AppService appService;
 	@Resource
 	private FileService fileService;
+	@Resource
+	private ChatHistoryService chatHistoryService;
+	@Autowired
+	private View error;
 
 	/**
 	 * 添加应用
@@ -127,6 +138,12 @@ public class AppController {
 		}
 		boolean res = appService.removeById(deleteRequest.getId());
 		ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "删除应用失败");
+		// 删除应用对应的对话历史记录
+		try {
+			chatHistoryService.deleteByAppId(deleteRequest.getId());
+		} catch (Exception e) {
+			log.error("删除应用 {} 的对话历史记录失败: {}", deleteRequest.getId(), e.getMessage());
+		}
 		return ResultUtils.success(true);
 	}
 
@@ -293,10 +310,18 @@ public class AppController {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
 		ThrowUtils.throwIf(StrUtil.isBlank(chatMessage), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
 		UserVO loginUser = userService.getLoginUser(request);// 确保用户已登录
+		//保存用户的提示词到聊天记录
+		AddChatHistoryReq addChatHistoryReq = new AddChatHistoryReq();
+		addChatHistoryReq.setAppId(appId);
+		addChatHistoryReq.setMessage(chatMessage);
+		addChatHistoryReq.setMessageType(MessageTypeEnum.USER.getValue());
+		chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
 		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, loginUser);
+		StringBuilder aiResponseBuilder = new StringBuilder();
 		// 额外封装成ServerSent Events,将原始数据放入json的d字段，解决空格问题
 		return contentFlux
 				.map(chunk -> {
+					aiResponseBuilder.append(chunk);
 					Map<String, String> map = Map.of("d", chunk);
 					String jsonData = JSONUtil.toJsonStr(map);
 					return ServerSentEvent.<String>builder()
@@ -310,6 +335,23 @@ public class AppController {
 										.build()
 						)
 				)
+				.doOnComplete(() -> {
+					// 完成后保存AI生成的代码到聊天记录
+					String aiContent = aiResponseBuilder.toString();
+					if (StrUtil.isNotBlank(aiContent)) {
+						addChatHistoryReq.setAppId(appId);
+						addChatHistoryReq.setMessage(aiContent);
+						addChatHistoryReq.setMessageType(MessageTypeEnum.AI.getValue());
+						chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
+					}
+				})
+				.doOnError(error -> {
+					// 记录错误的消息
+					addChatHistoryReq.setAppId(appId);
+					addChatHistoryReq.setMessage("AI生成代码失败: " + error.getMessage());
+					addChatHistoryReq.setMessageType(MessageTypeEnum.ERROR.getValue());
+					chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
+				})
 				;
 	}
 
@@ -330,6 +372,7 @@ public class AppController {
 
 	/**
 	 * 上传应用封面图片
+	 *
 	 * @param file
 	 * @param request
 	 * @return
