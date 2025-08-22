@@ -231,10 +231,8 @@ router.afterEach((to) => {
   padding: 8px 12px;
   border-radius: 20px;
   transition: background-color 0.3s;
-  background-color: rgba(255, 255, 255, 0.1);
   margin-left: 16px;
 }
-
 .user-avatar-wrapper:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
