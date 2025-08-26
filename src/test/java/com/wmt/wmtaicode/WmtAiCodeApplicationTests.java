@@ -15,9 +15,10 @@ class WmtAiCodeApplicationTests {
 
 	@Test
 	void generatorHTMLCode() {
-		HTMLCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode("做个博客首页");
+		HTMLCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode(1, "做个博客首页");
 		Assertions.assertNotNull(htmlCodeResult);
 	}
+
 	@Test
 	void generatorMultiFileCode() {
 		MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMutiFileCode("做个博客首页");

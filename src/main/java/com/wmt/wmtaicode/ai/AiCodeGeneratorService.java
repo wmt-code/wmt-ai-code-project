@@ -2,7 +2,9 @@ package com.wmt.wmtaicode.ai;
 
 import com.wmt.wmtaicode.ai.model.HTMLCodeResult;
 import com.wmt.wmtaicode.ai.model.MultiFileCodeResult;
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 
 /**
@@ -19,7 +21,7 @@ public interface AiCodeGeneratorService {
 	 * @return 生成的HTML代码
 	 */
 	@SystemMessage(fromResource = "prompt/codegen-html-system-prompt.txt")
-	HTMLCodeResult generateHTMLCode(String prompt);
+	HTMLCodeResult generateHTMLCode(@MemoryId int memoryId, @UserMessage String prompt);
 
 	/**
 	 * 生成多文件代码(html、css、js分离)

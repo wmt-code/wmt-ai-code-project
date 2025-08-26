@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 
-import java.io.File;
 import java.util.List;
 
 @SpringBootTest
@@ -19,12 +18,12 @@ class AiCodeGeneratorFacadeTest {
 
 	@Test
 	void generateAndSaveCode() {
-		File file = aiCodeGeneratorFacade.generateAndSaveCode("任务记录网站", CodeGenTypeEnum.MULTI_FILE,1L);
+		aiCodeGeneratorFacade.generateAndSaveCodeStream("创建一个极简的个人博客，代码少于50行", CodeGenTypeEnum.HTML, 1L);
 	}
 
 	@Test
 	void generateAndSaveCodeStream() {
-		Flux<String> flux = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE,1L);
+		Flux<String> flux = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE, 1L);
 		List<String> result = flux.collectList().block();
 		Assertions.assertNotNull(result);
 		String join = String.join("", result);

@@ -7,6 +7,7 @@ import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.dto.chathistory.ChatHistoryQueryReq;
 import com.wmt.wmtaicode.model.entity.ChatHistory;
 import com.wmt.wmtaicode.model.vo.UserVO;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.time.LocalDateTime;
 
@@ -26,4 +27,6 @@ public interface ChatHistoryService extends IService<ChatHistory> {
 
 	Page<ChatHistory> listAppChatHistoryByPage(long appId, int pageSize, LocalDateTime lastCreateTime,
 											   UserVO userVO);
+
+	int loadChatHistoryToMemory(long appId, MessageWindowChatMemory chatMemory, int maxCount);
 }

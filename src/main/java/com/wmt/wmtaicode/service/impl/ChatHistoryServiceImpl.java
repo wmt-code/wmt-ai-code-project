@@ -1,6 +1,7 @@
 package com.wmt.wmtaicode.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -18,10 +19,16 @@ import com.wmt.wmtaicode.model.enums.UserRoleEnum;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
 import com.wmt.wmtaicode.service.ChatHistoryService;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 对话历史记录表 服务层实现。
@@ -29,6 +36,7 @@ import java.time.LocalDateTime;
  * @author ethereal
  * @since 2025-08-23
  */
+@Slf4j
 @Service
 public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatHistory> implements ChatHistoryService {
 	@Resource
@@ -140,5 +148,46 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
 		chatHistoryQueryReq.setLastCreateTime(lastCreateTime);
 		QueryWrapper queryWrapper = this.getQueryWrapper(chatHistoryQueryReq);
 		return this.page(Page.of(1, pageSize), queryWrapper);
+	}
+
+	/**
+	 * 从数据库中加载对话历史记录到内存中。
+	 *
+	 * @param appId      应用ID
+	 * @param chatMemory 内存中的对话记录
+	 * @param maxCount   最大加载数量
+	 * @return 实际加载数量
+	 */
+	@Override
+	public int loadChatHistoryToMemory(long appId, MessageWindowChatMemory chatMemory, int maxCount) {
+		try {
+			QueryWrapper queryWrapper = QueryWrapper.create()
+					.eq(ChatHistory::getAppId, appId)
+					.orderBy(ChatHistory::getCreateTime, false)
+					.limit(1, maxCount);
+			List<ChatHistory> historyList = this.list(queryWrapper);
+			if (CollUtil.isEmpty(historyList)) {
+				return 0;
+			}
+			// 倒序插入内存
+			CollUtil.reverse(historyList);
+			AtomicInteger loadedCount = new AtomicInteger();
+			// 清除内存
+			chatMemory.clear();
+			historyList.forEach(history -> {
+				if (MessageTypeEnum.USER.getValue().equals(history.getMessageType())) {
+					chatMemory.add(UserMessage.from(history.getMessage()));
+					loadedCount.getAndIncrement();
+				} else if (MessageTypeEnum.AI.getValue().equals(history.getMessageType())) {
+					chatMemory.add(AiMessage.from(history.getMessage()));
+					loadedCount.getAndIncrement();
+				}
+			});
+			log.info("加载对话历史记录到内存，应用ID: {}, 加载数量: {}", appId, loadedCount.get());
+			return loadedCount.get();
+		} catch (Exception e) {
+			log.error("加载对话历史记录到内存失败，应用ID: {}, 错误信息: {}", appId, e.getMessage());
+			return 0;
+		}
 	}
 }
