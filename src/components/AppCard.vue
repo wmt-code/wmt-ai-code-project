@@ -56,21 +56,19 @@ const handleViewWork = () => {
 
 <style scoped>
 .app-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: #fff;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
   cursor: pointer;
+  will-change: transform, box-shadow;
 }
 
 .app-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .app-preview {
@@ -105,7 +103,8 @@ const handleViewWork = () => {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.1s ease;
+  will-change: opacity;
 }
 
 .app-card:hover .app-overlay {

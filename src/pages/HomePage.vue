@@ -135,24 +135,6 @@ const viewWork = (app: API.AppVO) => {
 onMounted(() => {
   loadMyApps()
   loadFeaturedApps()
-
-  // 鼠标跟随光效
-  const handleMouseMove = (e: MouseEvent) => {
-    const { clientX, clientY } = e
-    const { innerWidth, innerHeight } = window
-    const x = (clientX / innerWidth) * 100
-    const y = (clientY / innerHeight) * 100
-
-    document.documentElement.style.setProperty('--mouse-x', `${x}%`)
-    document.documentElement.style.setProperty('--mouse-y', `${y}%`)
-  }
-
-  document.addEventListener('mousemove', handleMouseMove)
-
-  // 清理事件监听器
-  return () => {
-    document.removeEventListener('mousemove', handleMouseMove)
-  }
 })
 </script>
 
@@ -281,16 +263,12 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 8%, #e2e8f0 20%, #cbd5e1 100%),
-    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 8%, #e2e8f0 20%, #cbd5e1 100%);
   position: relative;
   overflow: hidden;
 }
 
-/* 科技感网格背景 */
+/* 简化背景效果，使用静态渐变 */
 #homePage::before {
   content: '';
   position: absolute;
@@ -299,57 +277,11 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background-image:
-    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(139, 92, 246, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
-  background-size:
-    100px 100px,
-    100px 100px,
-    20px 20px,
-    20px 20px;
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
   pointer-events: none;
-  animation: gridFloat 20s ease-in-out infinite;
-}
-
-/* 动态光效 */
-#homePage::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(
-      600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(59, 130, 246, 0.08) 0%,
-      rgba(139, 92, 246, 0.06) 40%,
-      transparent 80%
-    ),
-    linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.04) 50%, transparent 70%),
-    linear-gradient(-45deg, transparent 30%, rgba(139, 92, 246, 0.04) 50%, transparent 70%);
-  pointer-events: none;
-  animation: lightPulse 8s ease-in-out infinite alternate;
-}
-
-@keyframes gridFloat {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(5px, 5px);
-  }
-}
-
-@keyframes lightPulse {
-  0% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 0.7;
-  }
+  opacity: 0.5;
 }
 
 .container {
@@ -382,21 +314,8 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(ellipse 800px 400px at center, rgba(59, 130, 246, 0.12) 0%, transparent 70%),
-    linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.05) 50%, transparent 70%),
-    linear-gradient(-45deg, transparent 30%, rgba(16, 185, 129, 0.04) 50%, transparent 70%);
-  animation: heroGlow 10s ease-in-out infinite alternate;
-}
-
-@keyframes heroGlow {
-  0% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.02);
-  }
+    radial-gradient(ellipse 800px 400px at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  opacity: 0.7;
 }
 
 @keyframes rotate {
@@ -420,17 +339,6 @@ onMounted(() => {
   letter-spacing: -1px;
   position: relative;
   z-index: 2;
-  animation: titleShimmer 3s ease-in-out infinite;
-}
-
-@keyframes titleShimmer {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
 }
 
 .hero-description {
@@ -455,14 +363,14 @@ onMounted(() => {
   font-size: 16px;
   padding: 20px 60px 20px 20px;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
 .prompt-input:focus {
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  outline: none;
 }
 
 .input-actions {
@@ -490,33 +398,15 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(59, 130, 246, 0.2);
   color: #475569;
-  backdrop-filter: blur(15px);
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-
-.quick-actions .ant-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.quick-actions .ant-btn:hover::before {
-  left: 100%;
+  transition: all 0.15s ease;
 }
 
 .quick-actions .ant-btn:hover {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(59, 130, 246, 0.4);
   color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 /* 区域标题 */
@@ -537,6 +427,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  contain: layout style;
 }
 
 /* 精选案例网格 */
@@ -545,6 +436,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  contain: layout style;
 }
 
 /* 分页 */
