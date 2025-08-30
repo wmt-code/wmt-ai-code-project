@@ -4,8 +4,6 @@ import com.wmt.wmtaicode.ai.AiCodeGeneratorFactory;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorService;
 import com.wmt.wmtaicode.ai.core.parser.CodeParserExecutor;
 import com.wmt.wmtaicode.ai.core.savecode.CodeFileSaveExecutor;
-import com.wmt.wmtaicode.ai.model.HTMLCodeResult;
-import com.wmt.wmtaicode.ai.model.MultiFileCodeResult;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
@@ -40,7 +38,8 @@ public class AiCodeGeneratorFacade {
 		if (codeGenTypeEnum == null) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, "生成的代码类型不能为空");
 		}
-		AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorFactory.getAiCodeGeneratorService(appId);
+		AiCodeGeneratorService aiCodeGeneratorService =
+				aiCodeGeneratorFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum);
 		return switch (codeGenTypeEnum) {
 			case HTML -> {
 				Flux<String> htmlCodeStream = aiCodeGeneratorService.generateHTMLCodeStream(prompt);
@@ -50,19 +49,24 @@ public class AiCodeGeneratorFacade {
 				Flux<String> mutiFileCodeStream = aiCodeGeneratorService.generateMutiFileCodeStream(prompt);
 				yield processCodeStream(mutiFileCodeStream, codeGenTypeEnum, appId);
 			}
+			case VUE_PROJECT -> {
+				Flux<String> codeStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, prompt);
+				yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
+			}
 			default ->
 					throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum.getValue());
 		};
 	}
 
 
-	/**
-	 * 统一接返回路径接口，生成代码-》保存文件
-	 *
-	 * @param prompt          提示词
-	 * @param codeGenTypeEnum 代码生成的类型
-	 * @return 文件路径
-	 */
+	// /**
+	//  * 统一接返回路径接口，生成代码-》保存文件
+	//  *
+	//  * @param prompt          提示词
+	//  * @param codeGenTypeEnum 代码生成的类型
+	//  * @return 文件路径
+	//  */
+	/*
 	public File generateAndSaveCode(int memoryId, String prompt, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
 		if (codeGenTypeEnum == null) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, "生成的代码类型不能为空");
@@ -80,23 +84,28 @@ public class AiCodeGeneratorFacade {
 			default ->
 					throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum.getValue());
 		};
-	}
+	} */
 
 	private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
 		StringBuilder sb = new StringBuilder();
 		return codeStream.doOnNext(sb::append
-		).doOnComplete(() -> {
-			try {
-				String completeCode = sb.toString();
-				// 解析代码
-				Object result = CodeParserExecutor.executeCodeParser(completeCode, codeGenTypeEnum);
-				// 保存代码
-				File saveDir = CodeFileSaveExecutor.executeSaveCode(result, codeGenTypeEnum, appId);
-				log.info("代码生成完成，保存到: {}", saveDir.getAbsolutePath());
-			} catch (Exception e) {
-				log.error("代码生成失败：{}", e.getMessage());
-			}
-		});
+				)
+				.doOnComplete(() -> {
+					try {
+						String completeCode = sb.toString();
+						// 解析代码
+						Object result = CodeParserExecutor.executeCodeParser(completeCode, codeGenTypeEnum);
+						// 保存代码
+						File saveDir = CodeFileSaveExecutor.executeSaveCode(result, codeGenTypeEnum, appId);
+						log.info("代码生成完成，保存到: {}", saveDir.getAbsolutePath());
+					} catch (Exception e) {
+						log.error("代码生成失败：{}", e.getMessage());
+					}
+				})
+				.onErrorResume(throwable -> {
+					// 发生错误时返回错误信息而不是中断流
+					return Flux.just("代码生成过程中发生错误，请稍后重试");
+				});
 	}
 
 

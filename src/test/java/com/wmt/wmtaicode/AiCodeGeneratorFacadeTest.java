@@ -16,17 +16,18 @@ class AiCodeGeneratorFacadeTest {
 	@Resource
 	private AiCodeGeneratorFacade aiCodeGeneratorFacade;
 
-	@Test
-	void generateAndSaveCode() {
-		aiCodeGeneratorFacade.generateAndSaveCodeStream("创建一个极简的个人博客，代码少于50行", CodeGenTypeEnum.HTML, 1L);
-	}
 
 	@Test
-	void generateAndSaveCodeStream() {
-		Flux<String> flux = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE, 1L);
-		List<String> result = flux.collectList().block();
+	void generateVueProjectCodeStream() {
+		Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(
+				"简单的任务记录网站，总代码量不超过 200 行",
+				CodeGenTypeEnum.VUE_PROJECT, 1L);
+		// 阻塞等待所有数据收集完成
+		List<String> result = codeStream.collectList().block();
+		// 验证结果
 		Assertions.assertNotNull(result);
-		String join = String.join("", result);
-		Assertions.assertNotNull(join);
+		String completeContent = String.join("", result);
+		Assertions.assertNotNull(completeContent);
 	}
+
 }

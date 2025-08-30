@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode;
+package com.wmt.wmtaicode.auth;
 
 import com.wmt.wmtaicode.annotation.AuthCheck;
 import com.wmt.wmtaicode.exception.BusinessException;

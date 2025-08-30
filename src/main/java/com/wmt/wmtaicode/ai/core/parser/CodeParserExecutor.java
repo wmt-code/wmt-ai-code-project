@@ -26,6 +26,8 @@ public class CodeParserExecutor {
 		return switch (codeGenTypeEnum) {
 			case HTML -> htmlCodeParser.parseCode(codeContent);
 			case MULTI_FILE -> mutiFileCodeParser.parseCode(codeContent);
+			default ->
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum.getValue());
 		};
 	}
 
