@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
+import com.wmt.wmtaicode.ai.core.handler.StreamHandlerExecutor;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.exception.BusinessException;
@@ -22,10 +23,12 @@ import com.wmt.wmtaicode.model.entity.User;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
+import com.wmt.wmtaicode.service.ChatHistoryService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -49,6 +52,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	private UserService userService;
 	@Resource
 	private AiCodeGeneratorFacade aiCodeGeneratorFacade;
+	@Resource
+	private StreamHandlerExecutor streamHandlerExecutor;
+	@Resource
+	@Lazy
+	private ChatHistoryService chatHistoryService;
 
 	@Override
 
@@ -123,7 +131,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getByValue(codeGenType);
 		ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR, "不支持的代码生成类型");
 		// 调用AI代码生成器生成代码
-		return aiCodeGeneratorFacade.generateAndSaveCodeStream(chatMessage, codeGenTypeEnum, appId);
+		Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(chatMessage, codeGenTypeEnum, appId);
+		// 根据不同的代码生成类型，使用不同的流处理器
+		return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
 	}
 
 	/**

@@ -11,8 +11,7 @@ import lombok.Getter;
 public enum MessageTypeEnum {
 
 	USER("用户消息", "user"),
-	AI("AI消息", "ai"),
-	ERROR("错误消息", "error");
+	AI("AI消息", "ai");
 
 	private final String text;
 

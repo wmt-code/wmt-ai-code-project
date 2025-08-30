@@ -1,16 +1,24 @@
 package com.wmt.wmtaicode.ai.core;
 
+import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorFactory;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorService;
 import com.wmt.wmtaicode.ai.core.parser.CodeParserExecutor;
 import com.wmt.wmtaicode.ai.core.savecode.CodeFileSaveExecutor;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
+import com.wmt.wmtaicode.ai.model.message.AiResponseMessage;
+import com.wmt.wmtaicode.ai.model.message.ToolExecutedRequestMessage;
+import com.wmt.wmtaicode.ai.model.message.ToolExecutedResultMessage;
+import dev.langchain4j.service.TokenStream;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.View;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
@@ -24,6 +32,8 @@ public class AiCodeGeneratorFacade {
 	@Lazy
 	@Resource
 	private AiCodeGeneratorFactory aiCodeGeneratorFactory;
+	@Autowired
+	private View error;
 
 
 	/**
@@ -50,8 +60,8 @@ public class AiCodeGeneratorFacade {
 				yield processCodeStream(mutiFileCodeStream, codeGenTypeEnum, appId);
 			}
 			case VUE_PROJECT -> {
-				Flux<String> codeStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, prompt);
-				yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
+				TokenStream tokenStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, prompt);
+				yield processTokenStream(tokenStream);
 			}
 			default ->
 					throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum.getValue());
@@ -59,6 +69,55 @@ public class AiCodeGeneratorFacade {
 	}
 
 
+	private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
+		StringBuilder sb = new StringBuilder();
+		return codeStream.doOnNext(sb::append
+				)
+				.doOnComplete(() -> {
+					try {
+						String completeCode = sb.toString();
+						// 解析代码
+						Object result = CodeParserExecutor.executeCodeParser(completeCode, codeGenTypeEnum);
+						// 保存代码
+						File saveDir = CodeFileSaveExecutor.executeSaveCode(result, codeGenTypeEnum, appId);
+						log.info("代码生成完成，保存到: {}", saveDir.getAbsolutePath());
+					} catch (Exception e) {
+						log.error("代码生成失败：{}", e.getMessage());
+					}
+				})
+				.onErrorResume(throwable -> {
+					// 发生错误时返回错误信息而不是中断流
+					return Flux.just("代码生成过程中发生错误，请稍后重试");
+				});
+	}
+
+	/**
+	 * 将TokenStream转换为Flux流
+	 * @param tokenStream TokenStream对象
+	 * @return Flux流
+	 */
+	private Flux<String> processTokenStream(TokenStream tokenStream) {
+		return Flux.create(sink -> {
+			tokenStream.onPartialResponse((String partialResponse) -> {
+				AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
+				sink.next(JSONUtil.toJsonStr(aiResponseMessage));
+			}).onPartialToolExecutionRequest((index, toolExecutionRequest) -> {
+				ToolExecutedRequestMessage toolExecutedRequestMessage =
+						new ToolExecutedRequestMessage(toolExecutionRequest);
+				sink.next(JSONUtil.toJsonStr(toolExecutedRequestMessage));
+			}).onToolExecuted((toolExecution -> {
+				ToolExecutedResultMessage toolExecutedResultMessage = new ToolExecutedResultMessage(toolExecution);
+				sink.next(JSONUtil.toJsonStr(toolExecutedResultMessage));
+			})).onCompleteResponse((ChatResponse chatResponse) -> {
+				sink.complete();
+			}).onError((Throwable error) -> {
+				error.printStackTrace();
+				sink.error(error);
+			}).start();
+		});
+	}
+
+	// ----------------------------------------------------------------------------------
 	// /**
 	//  * 统一接返回路径接口，生成代码-》保存文件
 	//  *
@@ -86,30 +145,6 @@ public class AiCodeGeneratorFacade {
 		};
 	} */
 
-	private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
-		StringBuilder sb = new StringBuilder();
-		return codeStream.doOnNext(sb::append
-				)
-				.doOnComplete(() -> {
-					try {
-						String completeCode = sb.toString();
-						// 解析代码
-						Object result = CodeParserExecutor.executeCodeParser(completeCode, codeGenTypeEnum);
-						// 保存代码
-						File saveDir = CodeFileSaveExecutor.executeSaveCode(result, codeGenTypeEnum, appId);
-						log.info("代码生成完成，保存到: {}", saveDir.getAbsolutePath());
-					} catch (Exception e) {
-						log.error("代码生成失败：{}", e.getMessage());
-					}
-				})
-				.onErrorResume(throwable -> {
-					// 发生错误时返回错误信息而不是中断流
-					return Flux.just("代码生成过程中发生错误，请稍后重试");
-				});
-	}
-
-
-	// ----------------------------------------------------------------------------------
 
 	/**
 	 * 生成多文件代码并保存到文件

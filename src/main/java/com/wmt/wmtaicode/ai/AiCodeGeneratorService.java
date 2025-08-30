@@ -4,6 +4,7 @@ import com.wmt.wmtaicode.ai.model.HTMLCodeResult;
 import com.wmt.wmtaicode.ai.model.MultiFileCodeResult;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 
@@ -58,5 +59,5 @@ public interface AiCodeGeneratorService {
 	 * @return 代码
 	 */
 	@SystemMessage(fromResource = "prompt/codegen-vue-project-system-prompt.txt")
-	Flux<String> generateVueProjectCodeStream(@MemoryId Long appId,@UserMessage String prompt);
+	TokenStream generateVueProjectCodeStream(@MemoryId Long appId, @UserMessage String prompt);
 }

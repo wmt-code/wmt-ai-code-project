@@ -50,35 +50,41 @@ public class AiCodeGeneratorFactory {
 			}).build();
 
 
-	private AiCodeGeneratorService createAiCodeGeneratorService(long appId, CodeGenTypeEnum codeGenTypeEnum) {
-		// 根据appId分配对应的aiService进行会话历史隔离
-
-		log.info("为appId: {} 创建新的AI服务实例", appId);
-		MessageWindowChatMemory chatMemory = new MessageWindowChatMemory.Builder()
+	/**
+	 * 创建新的 AI 服务实例
+	 */
+	private AiCodeGeneratorService createAiCodeGeneratorService(long appId, CodeGenTypeEnum codeGenType) {
+		// 根据 appId 构建独立的对话记忆
+		MessageWindowChatMemory chatMemory = MessageWindowChatMemory
+				.builder()
 				.id(appId)
 				.chatMemoryStore(redisChatMemoryStore)
 				.maxMessages(20)
 				.build();
-		// 从数据库中加载历史消息
+		// 从数据库加载历史对话到记忆中
 		chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
-		return switch (codeGenTypeEnum) {
-			case HTML, MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
-					.chatModel(chatModel)
-					// .chatModel(chatModel)
-					.streamingChatModel(openAiStreamingChatModel)
-					.chatMemory(chatMemory)
-					.build();
+		// 根据代码生成类型选择不同的模型配置
+		return switch (codeGenType) {
+			// Vue 项目生成使用推理模型
 			case VUE_PROJECT -> AiServices.builder(AiCodeGeneratorService.class)
 					.streamingChatModel(reasoningStreamChatModel)
 					.chatMemoryProvider(memoryId -> chatMemory)
 					.tools(new FileWriteTool())
-					.hallucinatedToolNameStrategy(toolExecutionRequest ->
-							ToolExecutionResultMessage.from(toolExecutionRequest,
-									"无法执行工具: " + toolExecutionRequest.name() + "，请检查工具名称是否正确"))
+					.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
+							toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
+					))
 					.build();
-			default -> throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum);
+			// HTML 和多文件生成使用默认模型
+			case HTML, MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
+					.chatModel(chatModel)
+					.streamingChatModel(openAiStreamingChatModel)
+					.chatMemory(chatMemory)
+					.build();
+			default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,
+					"不支持的代码生成类型: " + codeGenType.getValue());
 		};
 	}
+
 
 	/**
 	 * 根据 appId 获取服务（带缓存）这个方法是为了兼容历史逻辑

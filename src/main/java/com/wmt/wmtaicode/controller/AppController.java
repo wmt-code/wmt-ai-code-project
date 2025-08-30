@@ -29,12 +29,10 @@ import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.View;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -60,8 +58,6 @@ public class AppController {
 	private FileService fileService;
 	@Resource
 	private ChatHistoryService chatHistoryService;
-	@Autowired
-	private View error;
 
 	/**
 	 * 添加应用
@@ -83,7 +79,7 @@ public class AppController {
 		app.setUserId(loginUser.getId());
 		// 截取前12个字符作为应用名称
 		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
-		app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+		app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
 		boolean save = appService.save(app);
 		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "添加应用失败");
 		return ResultUtils.success(app.getId());
@@ -317,11 +313,11 @@ public class AppController {
 		addChatHistoryReq.setMessageType(MessageTypeEnum.USER.getValue());
 		chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
 		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, loginUser);
-		StringBuilder aiResponseBuilder = new StringBuilder();
+		// StringBuilder aiResponseBuilder = new StringBuilder();
 		// 额外封装成ServerSent Events,将原始数据放入json的d字段，解决空格问题
 		return contentFlux
 				.map(chunk -> {
-					aiResponseBuilder.append(chunk);
+					// aiResponseBuilder.append(chunk);
 					Map<String, String> map = Map.of("d", chunk);
 					String jsonData = JSONUtil.toJsonStr(map);
 					return ServerSentEvent.<String>builder()
@@ -335,23 +331,23 @@ public class AppController {
 										.build()
 						)
 				)
-				.doOnComplete(() -> {
-					// 完成后保存AI生成的代码到聊天记录
-					String aiContent = aiResponseBuilder.toString();
-					if (StrUtil.isNotBlank(aiContent)) {
-						addChatHistoryReq.setAppId(appId);
-						addChatHistoryReq.setMessage(aiContent);
-						addChatHistoryReq.setMessageType(MessageTypeEnum.AI.getValue());
-						chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
-					}
-				})
-				.doOnError(error -> {
-					// 记录错误的消息
-					addChatHistoryReq.setAppId(appId);
-					addChatHistoryReq.setMessage("AI生成代码失败: " + error.getMessage());
-					addChatHistoryReq.setMessageType(MessageTypeEnum.ERROR.getValue());
-					chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
-				})
+				// .doOnComplete(() -> {
+				// 	// 完成后保存AI生成的代码到聊天记录
+				// 	String aiContent = aiResponseBuilder.toString();
+				// 	if (StrUtil.isNotBlank(aiContent)) {
+				// 		addChatHistoryReq.setAppId(appId);
+				// 		addChatHistoryReq.setMessage(aiContent);
+				// 		addChatHistoryReq.setMessageType(MessageTypeEnum.AI.getValue());
+				// 		chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
+				// 	}
+				// })
+				// .doOnError(error -> {
+				// 	// 记录错误的消息
+				// 	addChatHistoryReq.setAppId(appId);
+				// 	addChatHistoryReq.setMessage("AI生成代码失败: " + error.getMessage());
+				// 	addChatHistoryReq.setMessageType(MessageTypeEnum.AI.getValue());
+				// 	chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
+				// })
 				;
 	}
 
