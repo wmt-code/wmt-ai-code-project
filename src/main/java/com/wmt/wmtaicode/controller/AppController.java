@@ -135,11 +135,8 @@ public class AppController {
 		boolean res = appService.removeById(deleteRequest.getId());
 		ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "删除应用失败");
 		// 删除应用对应的对话历史记录
-		try {
-			chatHistoryService.deleteByAppId(deleteRequest.getId());
-		} catch (Exception e) {
-			log.error("删除应用 {} 的对话历史记录失败: {}", deleteRequest.getId(), e.getMessage());
-		}
+		boolean delChatHistoryRes = chatHistoryService.deleteByAppId(deleteRequest.getId());
+		ThrowUtils.throwIf(!delChatHistoryRes, ErrorCode.OPERATION_ERROR, "删除聊天记录失败");
 		return ResultUtils.success(true);
 	}
 
@@ -225,6 +222,9 @@ public class AppController {
 		App oldApp = appService.getById(id);
 		ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
 		boolean result = appService.removeById(id);
+		// 删除应用对应的对话历史记录
+		boolean delChatHistoryRes = chatHistoryService.deleteByAppId(deleteRequest.getId());
+		ThrowUtils.throwIf(!delChatHistoryRes, ErrorCode.OPERATION_ERROR, "删除聊天记录失败");
 		return ResultUtils.success(result);
 	}
 
