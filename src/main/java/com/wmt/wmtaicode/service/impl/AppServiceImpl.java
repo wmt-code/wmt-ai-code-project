@@ -8,8 +8,9 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
-import com.wmt.wmtaicode.ai.core.handler.StreamHandlerExecutor;
+import com.wmt.wmtaicode.core.AiCodeGeneratorFacade;
+import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
+import com.wmt.wmtaicode.core.handler.StreamHandlerExecutor;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.exception.BusinessException;
@@ -57,6 +58,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	@Resource
 	@Lazy
 	private ChatHistoryService chatHistoryService;
+	@Resource
+	private VueProjectBuilder vueProjectBuilder;
 
 	@Override
 
@@ -162,6 +165,16 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		File sourceDirFile = new File(sourceDir);
 		ThrowUtils.throwIf(!sourceDirFile.exists() || !sourceDirFile.isDirectory(), ErrorCode.NOT_FOUND_ERROR,
 				"应用代码目录不存在");
+		// 对vue项目进行特殊处理
+		CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getByValue(codeGenType);
+		if (codeGenTypeEnum == CodeGenTypeEnum.VUE_PROJECT) {
+			boolean buildProject = vueProjectBuilder.buildProject(sourceDir);
+			ThrowUtils.throwIf(!buildProject, ErrorCode.OPERATION_ERROR, "项目构建失败，无法部署");
+			// 构建完成后，更新源代码目录为构建后的目录
+			sourceDirFile = new File(sourceDir + File.separator + "dist");
+			ThrowUtils.throwIf(!sourceDirFile.exists() || !sourceDirFile.isDirectory(), ErrorCode.NOT_FOUND_ERROR,
+					"应用代码目录不存在");
+		}
 		// 复制代码到部署目录
 		String deployDir = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
 		try {

@@ -1,14 +1,17 @@
-package com.wmt.wmtaicode.ai.core.handler;
+package com.wmt.wmtaicode.core.handler;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.model.message.*;
+import com.wmt.wmtaicode.constant.AppConstant;
+import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.ChatHistoryService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -23,6 +26,9 @@ import java.util.Set;
 @Slf4j
 @Component
 public class JsonMessageStreamHandler {
+	@Resource
+	private VueProjectBuilder vueProjectBuilder;
+
 	/**
 	 * 处理流式消息块
 	 *
@@ -51,6 +57,9 @@ public class JsonMessageStreamHandler {
 							.message(aiResponseBuilder.toString())
 							.build();
 					chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
+					// 执行完后，进行vue项目的构建和打包
+					String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
+					vueProjectBuilder.buildProjectAsync(projectPath);
 				}).doOnError(error -> {
 					// 记录异常日志
 					AddChatHistoryReq addChatHistoryReq = AddChatHistoryReq.builder()
