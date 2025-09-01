@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core;
+package com.wmt.wmtaicode.core;
 
 import com.wmt.wmtaicode.ai.model.HTMLCodeResult;
 import com.wmt.wmtaicode.ai.model.MultiFileCodeResult;

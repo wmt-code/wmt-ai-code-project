@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.handler;
+package com.wmt.wmtaicode.core.handler;
 
 import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;

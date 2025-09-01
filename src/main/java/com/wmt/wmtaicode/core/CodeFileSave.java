@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core;
+package com.wmt.wmtaicode.core;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;

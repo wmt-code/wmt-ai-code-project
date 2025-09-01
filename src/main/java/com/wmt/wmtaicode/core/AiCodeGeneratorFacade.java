@@ -1,10 +1,10 @@
-package com.wmt.wmtaicode.ai.core;
+package com.wmt.wmtaicode.core;
 
 import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorFactory;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorService;
-import com.wmt.wmtaicode.ai.core.parser.CodeParserExecutor;
-import com.wmt.wmtaicode.ai.core.savecode.CodeFileSaveExecutor;
+import com.wmt.wmtaicode.core.parser.CodeParserExecutor;
+import com.wmt.wmtaicode.core.savecode.CodeFileSaveExecutor;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.ai.model.message.AiResponseMessage;
 import com.wmt.wmtaicode.ai.model.message.ToolExecutedRequestMessage;

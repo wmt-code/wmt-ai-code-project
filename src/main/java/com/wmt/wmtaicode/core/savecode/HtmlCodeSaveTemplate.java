@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.savecode;
+package com.wmt.wmtaicode.core.savecode;
 
 import com.wmt.wmtaicode.ai.model.HTMLCodeResult;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;

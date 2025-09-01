@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.savecode;
+package com.wmt.wmtaicode.core.savecode;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;

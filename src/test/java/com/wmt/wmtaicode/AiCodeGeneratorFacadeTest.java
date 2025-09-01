@@ -1,6 +1,6 @@
 package com.wmt.wmtaicode;
 
-import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
+import com.wmt.wmtaicode.core.AiCodeGeneratorFacade;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;

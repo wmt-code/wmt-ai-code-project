@@ -18,12 +18,15 @@ public class RedisChatMemoryStoreConfig {
 	private String host;
 	private int port;
 	private long ttl;
+	private String password;
 
 	@Bean
 	public RedisChatMemoryStore redisChatMemoryStore() {
 		return RedisChatMemoryStore.builder()
 				.host(host)
 				.port(port)
+				.password(password)
+				.user("default")
 				.ttl(ttl)
 				.build();
 	}

@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.parser;
+package com.wmt.wmtaicode.core.parser;
 
 /**
  * 代码解析器，提取ai生成的代码中的有用信息

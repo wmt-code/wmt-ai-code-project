@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.parser;
+package com.wmt.wmtaicode.core.parser;
 
 import com.wmt.wmtaicode.ai.model.MultiFileCodeResult;
 

@@ -1,4 +1,4 @@
-package com.wmt.wmtaicode.ai.core.handler;
+package com.wmt.wmtaicode.core.handler;
 
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.model.vo.UserVO;
