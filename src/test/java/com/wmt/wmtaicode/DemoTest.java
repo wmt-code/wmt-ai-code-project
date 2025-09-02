@@ -1,11 +1,11 @@
 package com.wmt.wmtaicode;
 
-import cn.hutool.core.io.FileUtil;
+
+import com.wmt.wmtaicode.utils.WebScreenshotUtils;
 
 public class DemoTest {
 	public static void main(String[] args) {
-		String filePath = "/src/App.vue";
-		String suffix = FileUtil.getSuffix(filePath);
-		System.out.println(suffix);
+		String imagePth = WebScreenshotUtils.takeScreenshot("https://www.baidu.com");
+		System.out.println("screenshot path: " + imagePth);
 	}
 }
