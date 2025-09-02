@@ -153,7 +153,7 @@ import {
   deployApp as deployAppApi,
   deleteApp as deleteAppApi,
 } from '@/api/appController'
-import { listAppChatHistoryByPage } from '@/api/chatHistoryController'
+import { listAppChatHistory, listAppChatHistoryByPage } from '@/api/chatHistoryController'
 import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
 import request from '@/request'
 
@@ -228,7 +228,7 @@ const loadChatHistory = async (isLoadMore = false) => {
   if (!appId.value || loadingHistory.value) return
   loadingHistory.value = true
   try {
-    const params: API.listAppChatHistoryByPageParams = {
+    const params: API.listAppChatHistoryParams = {
       appId: appId.value,
       pageSize: 10,
     }
@@ -387,7 +387,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
     // 构建URL参数
     const params = new URLSearchParams({
       appId: appId.value || '',
-      chatMessage: userMessage,
+      message: userMessage,
     })
 
     const url = `${baseURL}/app/chat/gen/code?${params}`
