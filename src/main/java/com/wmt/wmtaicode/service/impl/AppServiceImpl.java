@@ -25,6 +25,7 @@ import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
 import com.wmt.wmtaicode.service.AppService;
 import com.wmt.wmtaicode.service.ChatHistoryService;
+import com.wmt.wmtaicode.service.ScreenshotService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,6 +61,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	private ChatHistoryService chatHistoryService;
 	@Resource
 	private VueProjectBuilder vueProjectBuilder;
+	@Resource
+	private ScreenshotService screenshotService;
 
 	@Override
 
@@ -189,6 +192,28 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		updateApp.setDeployTime(LocalDateTime.now());
 		boolean res = this.updateById(updateApp);
 		ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "应用部署失败");
-		return String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+		// 异步更新应用封面
+		String deployUrl = String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+		generateAndUploadScreenshotAsync(appId, deployUrl);
+		return deployUrl;
+	}
+
+	/**
+	 * 异步生成并上传应用截图
+	 *
+	 * @param appId     应用ID
+	 * @param deployUrl 部署访问URL
+	 */
+	private void generateAndUploadScreenshotAsync(Long appId, String deployUrl) {
+		Thread.ofVirtual().name("generateAndUploadScreenshotAsync_" + System.currentTimeMillis()).start(() -> {
+			String imageUrl = screenshotService.generateAndUploadScreenshot(deployUrl);
+			if (StrUtil.isNotBlank(imageUrl)) {
+				App updateApp = new App();
+				updateApp.setId(appId);
+				updateApp.setCover(imageUrl);
+				boolean res = this.updateById(updateApp);
+				ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "应用封面更新失败");
+			}
+		});
 	}
 }

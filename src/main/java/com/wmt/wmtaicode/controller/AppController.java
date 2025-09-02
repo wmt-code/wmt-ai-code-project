@@ -18,7 +18,6 @@ import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.model.dto.app.*;
 import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.entity.App;
-import com.wmt.wmtaicode.model.enums.FileTypeEnum;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
@@ -32,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -364,21 +362,5 @@ public class AppController {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
 		String url = appService.deployApp(appDeployReq, request);
 		return ResultUtils.success(url);
-	}
-
-	/**
-	 * 上传应用封面图片
-	 *
-	 * @param file
-	 * @param request
-	 * @return
-	 */
-	@PostMapping("/uploadAppCover")
-	public BaseResponse<String> uploadAppCover(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
-		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
-		UserVO loginUser = userService.getLoginUser(request);
-		ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
-		String coverUrl = fileService.uploadFile(file, "appCover", FileTypeEnum.IMAGE);
-		return ResultUtils.success(coverUrl);
 	}
 }

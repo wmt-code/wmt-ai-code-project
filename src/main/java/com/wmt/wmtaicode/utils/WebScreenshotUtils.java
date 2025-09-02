@@ -62,7 +62,7 @@ public class WebScreenshotUtils {
 	public static String takeScreenshot(String webUrl) {
 		if (StrUtil.isBlank(webUrl)) {
 			log.error("网页URL不能为空");
-			return null;
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "网页URL不能为空");
 		}
 		// 创建临时目录
 		String imageDirector = System.getProperty("user.dir") + File.separator + "tmp" + File.separator +
@@ -83,8 +83,8 @@ public class WebScreenshotUtils {
 			return imagePath;
 		} catch (Exception e) {
 			log.error("网页截图失败: {}", e.getMessage(), e);
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "网页截图失败");
 		}
-		return null;
 	}
 
 
