@@ -295,24 +295,24 @@ public class AppController {
 	 * 与AI对话生成代码
 	 *
 	 * @param appId       应用ID
-	 * @param chatMessage 用户提示词
+	 * @param message 用户提示词
 	 * @param request     HttpServletRequest
 	 * @return 代码生成结果的Flux流
 	 */
 	@GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam("appId") Long appId,
-													   @RequestParam("chatMessage") String chatMessage,
+													   @RequestParam("message") String message,
 													   HttpServletRequest request) {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
-		ThrowUtils.throwIf(StrUtil.isBlank(chatMessage), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
+		ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
 		UserVO loginUser = userService.getLoginUser(request);// 确保用户已登录
 		//保存用户的提示词到聊天记录
 		AddChatHistoryReq addChatHistoryReq = new AddChatHistoryReq();
 		addChatHistoryReq.setAppId(appId);
-		addChatHistoryReq.setMessage(chatMessage);
+		addChatHistoryReq.setMessage(message);
 		addChatHistoryReq.setMessageType(MessageTypeEnum.USER.getValue());
 		chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
-		Flux<String> contentFlux = appService.chatToGenCode(appId, chatMessage, loginUser);
+		Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
 		// StringBuilder aiResponseBuilder = new StringBuilder();
 		// 额外封装成ServerSent Events,将原始数据放入json的d字段，解决空格问题
 		return contentFlux
