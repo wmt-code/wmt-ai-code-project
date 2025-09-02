@@ -53,39 +53,7 @@ public class FileServiceImpl implements FileService {
 		String suffix = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
 
 		// 根据文件类型校验文件格式
-		switch (fileTypeEnum) {
-			case IMAGE:
-				if (!suffix.matches("\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 jpg、jpeg、png、gif、bmp、webp 格式的图片");
-				}
-				break;
-			case TEXT:
-				if (!suffix.matches("\\.(txt|doc|docx|pdf|md|html|css|js|json|xml|csv|yml|yaml|properties|java|py" +
-						"|sql)" +
-						"$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 txt、doc、docx、pdf、md、html、css、js、json" +
-							"、xml" +
-							"、csv、yml、yaml、properties、java、py、sql 格式的文本文件");
-				}
-				break;
-			case AUDIO:
-				if (!suffix.matches("\\.(mp3|wav|flac|aac|ogg|m4a|wma)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp3、wav、flac、aac、ogg、m4a、wma 格式的音频文件");
-				}
-				break;
-			case VIDEO:
-				if (!suffix.matches("\\.(mp4|avi|mov|wmv|flv|mkv|webm|m4v|3gp)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp4、avi、mov、wmv、flv、mkv、webm、m4v、3gp " +
-							"格式的视频文件");
-				}
-				break;
-			case DIRECTORY:
-				// 目录类型支持所有文件类型，不做格式限制
-				log.info("目录类型文件：{}", originalFilename);
-				break;
-			default:
-				throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的文件类型");
-		}
+		checkFileType(fileTypeEnum, suffix, originalFilename);
 
 		// 根据文件类型设置不同的大小限制
 		long maxSize = getMaxFileSizeByType(fileTypeEnum);
@@ -154,39 +122,7 @@ public class FileServiceImpl implements FileService {
 		}
 
 		// 根据文件类型校验文件格式（与MultipartFile版本相同的校验逻辑）
-		switch (fileTypeEnum) {
-			case IMAGE:
-				if (!suffix.matches("\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 jpg、jpeg、png、gif、bmp、webp 格式的图片");
-				}
-				break;
-			case TEXT:
-				if (!suffix.matches("\\.(txt|doc|docx|pdf|md|html|css|js|json|xml|csv|yml|yaml|properties|java|py" +
-						"|sql)" +
-						"$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 txt、doc、docx、pdf、md、html、css、js、json" +
-							"、xml" +
-							"、csv、yml、yaml、properties、java、py、sql 格式的文本文件");
-				}
-				break;
-			case AUDIO:
-				if (!suffix.matches("\\.(mp3|wav|flac|aac|ogg|m4a|wma)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp3、wav、flac、aac、ogg、m4a、wma 格式的音频文件");
-				}
-				break;
-			case VIDEO:
-				if (!suffix.matches("\\.(mp4|avi|mov|wmv|flv|mkv|webm|m4v|3gp)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp4、avi、mov、wmv、flv、mkv、webm、m4v、3gp " +
-							"格式的视频文件");
-				}
-				break;
-			case DIRECTORY:
-				// 目录类型支持所有文件类型，不做格式限制
-				log.info("目录类型文件：{}", originalFilename);
-				break;
-			default:
-				throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的文件类型");
-		}
+		checkFileType(fileTypeEnum, suffix, originalFilename);
 
 		// 根据文件类型设置不同的大小限制
 		long maxSize = getMaxFileSizeByType(fileTypeEnum);
@@ -231,6 +167,49 @@ public class FileServiceImpl implements FileService {
 		} catch (Exception e) {
 			log.error("COS上传失败", e);
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
+		}
+	}
+
+	/**
+	 * 校验文件类型和格式
+	 *
+	 * @param fileTypeEnum     文件类型枚举
+	 * @param suffix           文件后缀
+	 * @param originalFilename 原始文件名
+	 */
+	private static void checkFileType(FileTypeEnum fileTypeEnum, String suffix, String originalFilename) {
+		switch (fileTypeEnum) {
+			case IMAGE:
+				if (!suffix.matches("\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 jpg、jpeg、png、gif、bmp、webp 格式的图片");
+				}
+				break;
+			case TEXT:
+				if (!suffix.matches("\\.(txt|doc|docx|pdf|md|html|css|js|json|xml|csv|yml|yaml|properties|java|py" +
+						"|sql)" +
+						"$")) {
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 txt、doc、docx、pdf、md、html、css、js、json" +
+							"、xml" +
+							"、csv、yml、yaml、properties、java、py、sql 格式的文本文件");
+				}
+				break;
+			case AUDIO:
+				if (!suffix.matches("\\.(mp3|wav|flac|aac|ogg|m4a|wma)$")) {
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp3、wav、flac、aac、ogg、m4a、wma 格式的音频文件");
+				}
+				break;
+			case VIDEO:
+				if (!suffix.matches("\\.(mp4|avi|mov|wmv|flv|mkv|webm|m4v|3gp)$")) {
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 mp4、avi、mov、wmv、flv、mkv、webm、m4v、3gp " +
+							"格式的视频文件");
+				}
+				break;
+			case DIRECTORY:
+				// 目录类型支持所有文件类型，不做格式限制
+				log.info("目录类型文件：{}", originalFilename);
+				break;
+			default:
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的文件类型");
 		}
 	}
 
