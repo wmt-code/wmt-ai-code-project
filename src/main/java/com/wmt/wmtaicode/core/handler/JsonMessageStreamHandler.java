@@ -45,7 +45,6 @@ public class JsonMessageStreamHandler {
 		// 确保同一工具调用只出现一次
 		Set<String> seenToolIds = new HashSet<>();
 		return originFlux.map(chunk -> {
-					aiResponseBuilder.append(chunk);
 					// 解析每个消息块 ai响应内容、工具请求、工具调用结果
 					return handleJsonMessageChunk(chunk, aiResponseBuilder, seenToolIds);
 				}).filter(StrUtil::isNotEmpty)// 过滤空字符串
