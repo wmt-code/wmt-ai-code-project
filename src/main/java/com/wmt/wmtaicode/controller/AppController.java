@@ -5,7 +5,6 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
-import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.annotation.AuthCheck;
 import com.wmt.wmtaicode.common.BaseResponse;
 import com.wmt.wmtaicode.common.DeleteRequest;
@@ -66,22 +65,10 @@ public class AppController {
 	 * @return 应用ID
 	 */
 	@PostMapping("/add")
+
 	public BaseResponse<Long> addApp(@RequestBody AppAddReq addRequest, HttpServletRequest request) {
-		ThrowUtils.throwIf(addRequest == null, ErrorCode.PARAMS_ERROR);
-		String initPrompt = addRequest.getInitPrompt();
-		if (StrUtil.isBlank(initPrompt)) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "初始化提示词不能为空");
-		}
-		UserVO loginUser = userService.getLoginUser(request);
-		App app = new App();
-		BeanUtil.copyProperties(addRequest, app);
-		app.setUserId(loginUser.getId());
-		// 截取前12个字符作为应用名称
-		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
-		app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
-		boolean save = appService.save(app);
-		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "添加应用失败");
-		return ResultUtils.success(app.getId());
+		long appId = appService.addApp(addRequest, request);
+		return ResultUtils.success(appId);
 	}
 
 	/**
@@ -367,9 +354,10 @@ public class AppController {
 
 	/**
 	 * 下载项目
-	 * @param appId  应用ID
+	 *
+	 * @param appId    应用ID
 	 * @param response HttpServletResponse
-	 * @param request HttpServletRequest
+	 * @param request  HttpServletRequest
 	 */
 	@GetMapping("/download/{appId}")
 	public void downloadProject(@PathVariable("appId") Long appId, HttpServletResponse response,

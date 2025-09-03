@@ -8,6 +8,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.wmt.wmtaicode.ai.AiCodeGenTypeRoutingService;
 import com.wmt.wmtaicode.core.AiCodeGeneratorFacade;
 import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.core.handler.StreamHandlerExecutor;
@@ -17,6 +18,7 @@ import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
 import com.wmt.wmtaicode.mapper.AppMapper;
+import com.wmt.wmtaicode.model.dto.app.AppAddReq;
 import com.wmt.wmtaicode.model.dto.app.AppDeployReq;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
@@ -29,6 +31,7 @@ import com.wmt.wmtaicode.service.ScreenshotService;
 import com.wmt.wmtaicode.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -48,6 +51,7 @@ import java.util.stream.Collectors;
  * @author ethereal
  * @since 2025-08-18
  */
+@Slf4j
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
 	@Resource
@@ -63,6 +67,31 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	private VueProjectBuilder vueProjectBuilder;
 	@Resource
 	private ScreenshotService screenshotService;
+	@Resource
+	private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+
+	@Override
+	public long addApp(AppAddReq addRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(addRequest == null, ErrorCode.PARAMS_ERROR);
+		String initPrompt = addRequest.getInitPrompt();
+		if (StrUtil.isBlank(initPrompt)) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "初始化提示词不能为空");
+		}
+		UserVO loginUser = userService.getLoginUser(request);
+		App app = new App();
+		BeanUtil.copyProperties(addRequest, app);
+		app.setUserId(loginUser.getId());
+		// 截取前12个字符作为应用名称
+		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+		// ai自动识别用户提示词生成类型
+		CodeGenTypeEnum codeGenTypeEnum = aiCodeGenTypeRoutingService.codeGenTypeRouting(initPrompt);
+		app.setCodeGenType(codeGenTypeEnum.getValue());
+		boolean save = this.save(app);
+		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "添加应用失败");
+		log.info("添加应用成功，应用ID：{}，应用类型：{}", app.getId(), codeGenTypeEnum.getValue());
+		return app.getId();
+	}
+
 
 	@Override
 

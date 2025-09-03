@@ -2,6 +2,7 @@ package com.wmt.wmtaicode.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
+import com.wmt.wmtaicode.model.dto.app.AppAddReq;
 import com.wmt.wmtaicode.model.dto.app.AppDeployReq;
 import com.wmt.wmtaicode.model.dto.app.AppQueryReq;
 import com.wmt.wmtaicode.model.entity.App;
@@ -19,6 +20,8 @@ import java.util.List;
  * @since 2025-08-18
  */
 public interface AppService extends IService<App> {
+
+	long addApp(AppAddReq addRequest, HttpServletRequest request);
 
 	AppVO getAppVO(App app);
 
