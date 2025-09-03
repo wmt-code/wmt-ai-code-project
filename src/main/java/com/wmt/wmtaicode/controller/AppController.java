@@ -21,12 +21,10 @@ import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
-import com.wmt.wmtaicode.service.AppService;
-import com.wmt.wmtaicode.service.ChatHistoryService;
-import com.wmt.wmtaicode.service.FileService;
-import com.wmt.wmtaicode.service.UserService;
+import com.wmt.wmtaicode.service.*;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -34,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,8 @@ public class AppController {
 	private FileService fileService;
 	@Resource
 	private ChatHistoryService chatHistoryService;
+	@Resource
+	private ProjectDownloadService projectDownloadService;
 
 	/**
 	 * 添加应用
@@ -292,9 +293,9 @@ public class AppController {
 	/**
 	 * 与AI对话生成代码
 	 *
-	 * @param appId       应用ID
+	 * @param appId   应用ID
 	 * @param message 用户提示词
-	 * @param request     HttpServletRequest
+	 * @param request HttpServletRequest
 	 * @return 代码生成结果的Flux流
 	 */
 	@GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -304,7 +305,7 @@ public class AppController {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
 		ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
 		UserVO loginUser = userService.getLoginUser(request);// 确保用户已登录
-		//保存用户的提示词到聊天记录
+		// 保存用户的提示词到聊天记录
 		AddChatHistoryReq addChatHistoryReq = new AddChatHistoryReq();
 		addChatHistoryReq.setAppId(appId);
 		addChatHistoryReq.setMessage(message);
@@ -362,5 +363,29 @@ public class AppController {
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
 		String url = appService.deployApp(appDeployReq, request);
 		return ResultUtils.success(url);
+	}
+
+	/**
+	 * 下载项目
+	 * @param appId  应用ID
+	 * @param response HttpServletResponse
+	 * @param request HttpServletRequest
+	 */
+	@GetMapping("/download/{appId}")
+	public void downloadProject(@PathVariable("appId") Long appId, HttpServletResponse response,
+								HttpServletRequest request) {
+		// 基本校验
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
+		App app = appService.getById(appId);
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+		UserVO loginUser = userService.getLoginUser(request);
+		ThrowUtils.throwIf(!app.getUserId().equals(loginUser.getId()), ErrorCode.NO_AUTH_ERROR, "无权限下载该应用");
+		// 项目目录
+		String codeGenType = app.getCodeGenType();
+		String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + codeGenType + "_" + appId;
+		File sourceDir = new File(sourceDirPath);
+		ThrowUtils.throwIf(!sourceDir.exists() || !sourceDir.isDirectory(), ErrorCode.NOT_FOUND_ERROR, "应用代码目录不存在");
+		String downloadFileName = String.valueOf(appId);
+		projectDownloadService.downloadProjectAsZip(sourceDirPath, downloadFileName, response);
 	}
 }
