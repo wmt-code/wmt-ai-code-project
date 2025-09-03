@@ -12,6 +12,12 @@
           </template>
           应用详情
         </a-button>
+        <a-button type="default" @click="downloadCode">
+          <template #icon>
+            <DownloadOutlined />
+          </template>
+          下载代码
+        </a-button>
         <a-button type="primary" @click="deployApp" :loading="deploying">
           <template #icon>
             <CloudUploadOutlined />
@@ -152,6 +158,7 @@ import {
   getAppVoById,
   deployApp as deployAppApi,
   deleteApp as deleteAppApi,
+  downloadProject,
 } from '@/api/appController'
 import { listAppChatHistory, listAppChatHistoryByPage } from '@/api/chatHistoryController'
 import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
@@ -168,6 +175,7 @@ import {
   SendOutlined,
   ExportOutlined,
   InfoCircleOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -482,6 +490,33 @@ const updatePreview = () => {
 const scrollToBottom = () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
+}
+
+// 下载代码
+const downloadCode = async () => {
+  if (!appId.value) {
+    message.error('应用ID不存在')
+    return
+  }
+
+  try {
+    // 使用原生 fetch 来处理文件下载，以便正确处理响应头
+    const downloadUrl = `${request.defaults.baseURL || API_BASE_URL}/app/download/${appId.value}`
+    
+    // 使用 window.location.href 或创建隐藏链接来触发下载
+    // 这样可以正确处理后端设置的 Content-Disposition 头
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    message.success('开始下载代码包')
+  } catch (error) {
+    console.error('下载代码失败：', error)
+    message.error('下载代码失败，请重试')
   }
 }
 

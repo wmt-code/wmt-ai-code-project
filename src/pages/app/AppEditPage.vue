@@ -22,22 +22,22 @@
             />
           </a-form-item>
 
-          <a-form-item label="应用封面" name="cover">
-            <a-upload
-              name="cover"
-              list-type="picture-card"
-              :show-upload-list="false"
-              :before-upload="beforeUpload"
-              :custom-request="handleUploadCover"
-            >
-              <img v-if="formData.cover" :src="formData.cover" alt="应用封面" class="cover" />
-              <div v-else>
-                <loading-outlined v-if="coverLoading"></loading-outlined>
-                <plus-outlined v-else></plus-outlined>
-                <div class="ant-upload-text">上传封面</div>
-              </div>
-            </a-upload>
-          </a-form-item>
+          <!--<a-form-item label="应用封面" name="cover">-->
+          <!--  <a-upload-->
+          <!--    name="cover"-->
+          <!--    list-type="picture-card"-->
+          <!--    :show-upload-list="false"-->
+          <!--    :before-upload="beforeUpload"-->
+          <!--    :custom-request="handleUploadCover"-->
+          <!--  >-->
+          <!--    <img v-if="formData.cover" :src="formData.cover" alt="应用封面" class="cover" />-->
+          <!--    <div v-else>-->
+          <!--      <loading-outlined v-if="coverLoading"></loading-outlined>-->
+          <!--      <plus-outlined v-else></plus-outlined>-->
+          <!--      <div class="ant-upload-text">上传封面</div>-->
+          <!--    </div>-->
+          <!--  </a-upload>-->
+          <!--</a-form-item>-->
 
           <a-form-item v-if="isAdmin" label="优先级" name="priority" extra="设置为100表示精选应用">
             <a-input-number
@@ -267,45 +267,45 @@ const openPreview = () => {
     window.open(url, '_blank')
   }
 }
-//上传图片封面
-const handleUploadCover = async ({ file }: any) => {
-  try {
-    coverLoading.value = true
-    const res = await uploadAppCover({}, file as File)
-    if (res.data.code == 0 && res.data.data) {
-      formData.cover = res.data.data
-      message.success('图片封面上传成功')
-      coverLoading.value = false
-    } else {
-      message.error(res.data.message || '图片封面上传失败')
-      coverLoading.value = false
-    }
-  } catch (error: any) {
-    message.error(error.message || '图片封面上传失败')
-    coverLoading.value = false
-  }
-}
-
-/**
- * 上传前校验
- * @param file
- */
-const beforeUpload = (file: any) => {
-  const isJpgOrPng =
-    file.type === 'image/jpeg' ||
-    file.type === 'image/png' ||
-    file.type === 'image/webp' ||
-    file.type === 'image/bmp' ||
-    file.type === 'image/gif'
-  if (!isJpgOrPng) {
-    message.error('不支持上传该格式的图片，推荐 jpg 或 png')
-  }
-  const isLt5M = file.size / 1024 / 1024 < 5
-  if (!isLt5M) {
-    message.error('不能上传超过 5M 的图片')
-  }
-  return isJpgOrPng && isLt5M
-}
+// //上传图片封面
+// const handleUploadCover = async ({ file }: any) => {
+//   try {
+//     coverLoading.value = true
+//     const res = await uploadAppCover({}, file as File)
+//     if (res.data.code == 0 && res.data.data) {
+//       formData.cover = res.data.data
+//       message.success('图片封面上传成功')
+//       coverLoading.value = false
+//     } else {
+//       message.error(res.data.message || '图片封面上传失败')
+//       coverLoading.value = false
+//     }
+//   } catch (error: any) {
+//     message.error(error.message || '图片封面上传失败')
+//     coverLoading.value = false
+//   }
+// }
+//
+// /**
+//  * 上传前校验
+//  * @param file
+//  */
+// const beforeUpload = (file: any) => {
+//   const isJpgOrPng =
+//     file.type === 'image/jpeg' ||
+//     file.type === 'image/png' ||
+//     file.type === 'image/webp' ||
+//     file.type === 'image/bmp' ||
+//     file.type === 'image/gif'
+//   if (!isJpgOrPng) {
+//     message.error('不支持上传该格式的图片，推荐 jpg 或 png')
+//   }
+//   const isLt5M = file.size / 1024 / 1024 < 5
+//   if (!isLt5M) {
+//     message.error('不能上传超过 5M 的图片')
+//   }
+//   return isJpgOrPng && isLt5M
+// }
 
 // 页面加载时获取应用信息
 onMounted(() => {

@@ -130,11 +130,15 @@ declare namespace API {
 
   type chatToGenCodeParams = {
     appId: number
-    chatMessage: string
+    message: string
   }
 
   type DeleteRequest = {
     id?: number
+  }
+
+  type downloadProjectParams = {
+    appId: number
   }
 
   type getAppVOByIdByAdminParams = {
