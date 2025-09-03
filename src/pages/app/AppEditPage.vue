@@ -2,6 +2,9 @@
   <div id="appEditPage">
     <div class="page-header">
       <h1>编辑应用信息</h1>
+      <a-tag v-if="appInfo?.codeGenType" color="blue" class="gen-type-tag">
+        {{ formatCodeGenType(appInfo.codeGenType) }}
+      </a-tag>
     </div>
 
     <div class="edit-container">
@@ -331,6 +334,10 @@ onMounted(() => {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
+}
+
+.gen-type-tag {
+  font-size: 12px;
 }
 
 .edit-container {
