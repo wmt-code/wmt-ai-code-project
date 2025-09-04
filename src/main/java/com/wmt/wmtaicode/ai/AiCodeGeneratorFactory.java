@@ -3,7 +3,7 @@ package com.wmt.wmtaicode.ai;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
-import com.wmt.wmtaicode.ai.tools.FileWriteTool;
+import com.wmt.wmtaicode.ai.tools.*;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.service.ChatHistoryService;
@@ -36,6 +36,8 @@ public class AiCodeGeneratorFactory {
 	private RedisChatMemoryStore redisChatMemoryStore;
 	@Resource
 	private ChatHistoryService chatHistoryService;
+	@Resource
+	private ToolManager toolManager;
 	/**
 	 * 服务实例缓存，key为appId，value为AiCodeGeneratorService实例
 	 * 最大缓存1000个实例，写入30分钟后过期，10分钟未访问后过期
@@ -69,7 +71,7 @@ public class AiCodeGeneratorFactory {
 			case VUE_PROJECT -> AiServices.builder(AiCodeGeneratorService.class)
 					.streamingChatModel(reasoningStreamChatModel)
 					.chatMemoryProvider(memoryId -> chatMemory)
-					.tools(new FileWriteTool())
+					.tools(toolManager.getAllTools())
 					.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
 							toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
 					))

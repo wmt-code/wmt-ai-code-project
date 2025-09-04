@@ -1,10 +1,11 @@
 package com.wmt.wmtaicode.core.handler;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.model.message.*;
+import com.wmt.wmtaicode.ai.tools.BaseTool;
+import com.wmt.wmtaicode.ai.tools.ToolManager;
 import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
@@ -28,6 +29,8 @@ import java.util.Set;
 public class JsonMessageStreamHandler {
 	@Resource
 	private VueProjectBuilder vueProjectBuilder;
+	@Resource
+	private ToolManager toolManager;
 
 	/**
 	 * 处理流式消息块
@@ -90,11 +93,14 @@ public class JsonMessageStreamHandler {
 				ToolExecutedRequestMessage toolExecutedRequestMessage = JSONUtil.toBean(chunk,
 						ToolExecutedRequestMessage.class);
 				String toolId = toolExecutedRequestMessage.getId();
+				// 获取工具名称
+				String toolName = toolExecutedRequestMessage.getName();
+				BaseTool tool = toolManager.getToolByName(toolName);
 				// 检查是否第一次调用工具
 				if (toolId != null && !seenToolIds.contains(toolId)) {
 					// 第一次调用则记录ID
 					seenToolIds.add(toolId);
-					return "\n\n[选择工具] 写入文件\n\n";
+					return tool.generateToolRequestResponse();
 				} else {
 					// 不是则返回空字符串
 					return "";
@@ -104,15 +110,9 @@ public class JsonMessageStreamHandler {
 				ToolExecutedResultMessage toolExecutedResultMessage = JSONUtil.toBean(chunk,
 						ToolExecutedResultMessage.class);
 				JSONObject jsonObject = JSONUtil.parseObj(toolExecutedResultMessage.getArguments());
-				String relativeFilePath = jsonObject.getStr("relativeFilePath");
-				String suffix = FileUtil.getSuffix(relativeFilePath);
-				String content = jsonObject.getStr("content");
-				String result = String.format("""
-						[工具调用] 写入文件 %s
-						```%s
-						%s
-						```
-						""", relativeFilePath, suffix, content);
+				String toolName = toolExecutedResultMessage.getName();
+				BaseTool tool = toolManager.getToolByName(toolName);
+				String result = tool.generateToolExecutedResult(jsonObject);
 				String output = String.format("\n\n%s\n\n", result);
 				// 拼接响应
 				aiResponseBuilder.append(output);
