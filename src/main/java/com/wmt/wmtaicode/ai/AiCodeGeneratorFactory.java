@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Configuration
 public class AiCodeGeneratorFactory {
-	@Resource(name = "openAiChatModel")
+	@Resource
 	private ChatModel chatModel;
 	@Resource
 	private StreamingChatModel openAiStreamingChatModel;
