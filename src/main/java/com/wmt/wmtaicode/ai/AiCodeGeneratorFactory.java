@@ -7,6 +7,7 @@ import com.wmt.wmtaicode.ai.tools.*;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.service.ChatHistoryService;
+import com.wmt.wmtaicode.utils.SpringContextUtil;
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Configuration
 public class AiCodeGeneratorFactory {
-	@Resource
+	@Resource(name = "openAiChatModel")
 	private ChatModel chatModel;
 	@Resource
 	private StreamingChatModel openAiStreamingChatModel;
@@ -68,22 +69,30 @@ public class AiCodeGeneratorFactory {
 		// 根据代码生成类型选择不同的模型配置
 		return switch (codeGenType) {
 			// Vue 项目生成使用推理模型
-			case VUE_PROJECT -> AiServices.builder(AiCodeGeneratorService.class)
-					.streamingChatModel(reasoningStreamChatModel)
-					.chatMemoryProvider(memoryId -> chatMemory)
-					.tools(toolManager.getAllTools())
-					.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
-							toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
-					))
-					.build();
+			case VUE_PROJECT -> {
+				// 使用多例模式，避免不同用户之间的对话内容相互影响
+				StreamingChatModel reasoningStreamingChatModelPrototype = SpringContextUtil.getBean(
+						"reasoningStreamingChatModelPrototype", StreamingChatModel.class);
+				yield AiServices.builder(AiCodeGeneratorService.class)
+						.streamingChatModel(reasoningStreamingChatModelPrototype)
+						.chatMemoryProvider(memoryId -> chatMemory)
+						.tools(toolManager.getAllTools())
+						.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
+								toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
+						))
+						.build();
+			}
 			// HTML 和多文件生成使用默认模型
-			case HTML, MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
-					.chatModel(chatModel)
-					.streamingChatModel(openAiStreamingChatModel)
-					.chatMemory(chatMemory)
-					.build();
-			default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,
-					"不支持的代码生成类型: " + codeGenType.getValue());
+			case HTML, MULTI_FILE -> {
+				StreamingChatModel streamingChatModelPrototype = SpringContextUtil.getBean(
+						"streamingChatModelPrototype", StreamingChatModel.class);
+				yield AiServices.builder(AiCodeGeneratorService.class)
+						.chatModel(chatModel)
+						.streamingChatModel(streamingChatModelPrototype)
+						.chatMemory(chatMemory)
+						.build();
+			}
+			default -> throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型");
 		};
 	}
 

@@ -1,5 +1,6 @@
 package com.wmt.wmtaicode.ai;
 
+import com.wmt.wmtaicode.utils.SpringContextUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import jakarta.annotation.Resource;
@@ -20,10 +21,16 @@ public class AiCodeGenTypeRoutingFactory {
 	 *
 	 * @return AiCodeGenTypeRoutingService实例
 	 */
+	public AiCodeGenTypeRoutingService createAiCodeGenTypeRoutingService() {
+		ChatModel routingChatModelPrototype = SpringContextUtil.getBean("routingChatModelPrototype",
+				ChatModel.class);
+		return AiServices.builder(AiCodeGenTypeRoutingService.class)
+				.chatModel(routingChatModelPrototype)
+				.build();
+	}
+
 	@Bean
 	public AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService() {
-		return AiServices.builder(AiCodeGenTypeRoutingService.class)
-				.chatModel(chatModel)
-				.build();
+		return createAiCodeGenTypeRoutingService();
 	}
 }

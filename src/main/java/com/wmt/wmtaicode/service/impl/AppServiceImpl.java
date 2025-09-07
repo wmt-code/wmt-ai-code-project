@@ -8,12 +8,13 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.wmt.wmtaicode.ai.AiCodeGenTypeRoutingFactory;
 import com.wmt.wmtaicode.ai.AiCodeGenTypeRoutingService;
+import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
+import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.core.AiCodeGeneratorFacade;
 import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.core.handler.StreamHandlerExecutor;
-import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
-import com.wmt.wmtaicode.constant.AppConstant;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.exception.ThrowUtils;
@@ -68,7 +69,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	@Resource
 	private ScreenshotService screenshotService;
 	@Resource
-	private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+	private AiCodeGenTypeRoutingFactory aiCodeGenTypeRoutingFactory;
 
 	@Override
 	public long addApp(AppAddReq addRequest, HttpServletRequest request) {
@@ -84,6 +85,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		// 截取前12个字符作为应用名称
 		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
 		// ai自动识别用户提示词生成类型
+		AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService = aiCodeGenTypeRoutingFactory.createAiCodeGenTypeRoutingService();
 		CodeGenTypeEnum codeGenTypeEnum = aiCodeGenTypeRoutingService.codeGenTypeRouting(initPrompt);
 		app.setCodeGenType(codeGenTypeEnum.getValue());
 		boolean save = this.save(app);
