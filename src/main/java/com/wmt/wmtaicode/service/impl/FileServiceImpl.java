@@ -180,8 +180,8 @@ public class FileServiceImpl implements FileService {
 	private static void checkFileType(FileTypeEnum fileTypeEnum, String suffix, String originalFilename) {
 		switch (fileTypeEnum) {
 			case IMAGE:
-				if (!suffix.matches("\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
-					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 jpg、jpeg、png、gif、bmp、webp 格式的图片");
+				if (!suffix.matches("\\.(jpg|jpeg|png|gif|bmp|webp|svg)$")) {
+					throw new BusinessException(ErrorCode.PARAMS_ERROR, "只支持 jpg、jpeg、png、gif、bmp、webp、svg 格式的图片");
 				}
 				break;
 			case TEXT:

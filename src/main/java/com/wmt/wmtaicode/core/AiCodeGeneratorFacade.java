@@ -3,22 +3,20 @@ package com.wmt.wmtaicode.core;
 import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorFactory;
 import com.wmt.wmtaicode.ai.AiCodeGeneratorService;
-import com.wmt.wmtaicode.core.parser.CodeParserExecutor;
-import com.wmt.wmtaicode.core.savecode.CodeFileSaveExecutor;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.ai.model.message.AiResponseMessage;
 import com.wmt.wmtaicode.ai.model.message.ToolExecutedRequestMessage;
 import com.wmt.wmtaicode.ai.model.message.ToolExecutedResultMessage;
-import dev.langchain4j.service.TokenStream;
+import com.wmt.wmtaicode.core.parser.CodeParserExecutor;
+import com.wmt.wmtaicode.core.savecode.CodeFileSaveExecutor;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.service.TokenStream;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.View;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
@@ -32,8 +30,6 @@ public class AiCodeGeneratorFacade {
 	@Lazy
 	@Resource
 	private AiCodeGeneratorFactory aiCodeGeneratorFactory;
-	@Autowired
-	private View error;
 
 
 	/**
