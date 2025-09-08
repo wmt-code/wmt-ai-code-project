@@ -7,6 +7,8 @@ import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.ai.model.message.AiResponseMessage;
 import com.wmt.wmtaicode.ai.model.message.ToolExecutedRequestMessage;
 import com.wmt.wmtaicode.ai.model.message.ToolExecutedResultMessage;
+import com.wmt.wmtaicode.constant.AppConstant;
+import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.core.parser.CodeParserExecutor;
 import com.wmt.wmtaicode.core.savecode.CodeFileSaveExecutor;
 import com.wmt.wmtaicode.exception.BusinessException;
@@ -27,6 +29,8 @@ import java.io.File;
 @Service
 @Slf4j
 public class AiCodeGeneratorFacade {
+	@Resource
+	private VueProjectBuilder vueProjectBuilder;
 	@Lazy
 	@Resource
 	private AiCodeGeneratorFactory aiCodeGeneratorFactory;
@@ -57,7 +61,7 @@ public class AiCodeGeneratorFacade {
 			}
 			case VUE_PROJECT -> {
 				TokenStream tokenStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, prompt);
-				yield processTokenStream(tokenStream);
+				yield processTokenStream(tokenStream, appId);
 			}
 			default ->
 					throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum.getValue());
@@ -89,10 +93,11 @@ public class AiCodeGeneratorFacade {
 
 	/**
 	 * 将TokenStream转换为Flux流
+	 *
 	 * @param tokenStream TokenStream对象
 	 * @return Flux流
 	 */
-	private Flux<String> processTokenStream(TokenStream tokenStream) {
+	private Flux<String> processTokenStream(TokenStream tokenStream, Long appId) {
 		return Flux.create(sink -> {
 			tokenStream.onPartialResponse((String partialResponse) -> {
 				AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
@@ -105,6 +110,9 @@ public class AiCodeGeneratorFacade {
 				ToolExecutedResultMessage toolExecutedResultMessage = new ToolExecutedResultMessage(toolExecution);
 				sink.next(JSONUtil.toJsonStr(toolExecutedResultMessage));
 			})).onCompleteResponse((ChatResponse chatResponse) -> {
+				// 执行完后，进行vue项目的构建和打包
+				String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
+				vueProjectBuilder.buildProject(projectPath);
 				sink.complete();
 			}).onError((Throwable error) -> {
 				error.printStackTrace();

@@ -6,8 +6,6 @@ import cn.hutool.json.JSONUtil;
 import com.wmt.wmtaicode.ai.model.message.*;
 import com.wmt.wmtaicode.ai.tools.BaseTool;
 import com.wmt.wmtaicode.ai.tools.ToolManager;
-import com.wmt.wmtaicode.constant.AppConstant;
-import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.model.dto.chathistory.AddChatHistoryReq;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.UserVO;
@@ -27,8 +25,6 @@ import java.util.Set;
 @Slf4j
 @Component
 public class JsonMessageStreamHandler {
-	@Resource
-	private VueProjectBuilder vueProjectBuilder;
 	@Resource
 	private ToolManager toolManager;
 
@@ -59,9 +55,6 @@ public class JsonMessageStreamHandler {
 							.message(aiResponseBuilder.toString())
 							.build();
 					chatHistoryService.addChatHistory(addChatHistoryReq, loginUser);
-					// 执行完后，进行vue项目的构建和打包
-					String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
-					vueProjectBuilder.buildProjectAsync(projectPath);
 				}).doOnError(error -> {
 					// 记录异常日志
 					AddChatHistoryReq addChatHistoryReq = AddChatHistoryReq.builder()
