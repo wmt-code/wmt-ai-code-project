@@ -2,6 +2,8 @@ package com.wmt.wmtaicode.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wmt.wmtaicode.ai.guardrail.PromptSafetyInputGuardrail;
+import com.wmt.wmtaicode.ai.guardrail.RetryOutputGuardrail;
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.ai.tools.*;
 import com.wmt.wmtaicode.exception.BusinessException;
@@ -77,6 +79,8 @@ public class AiCodeGeneratorFactory {
 						.streamingChatModel(reasoningStreamingChatModelPrototype)
 						.chatMemoryProvider(memoryId -> chatMemory)
 						.tools(toolManager.getAllTools())
+						.inputGuardrails(new PromptSafetyInputGuardrail())
+						.outputGuardrails(new RetryOutputGuardrail())
 						.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
 								toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
 						))
@@ -90,6 +94,8 @@ public class AiCodeGeneratorFactory {
 						.chatModel(chatModel)
 						.streamingChatModel(streamingChatModelPrototype)
 						.chatMemory(chatMemory)
+						.inputGuardrails(new PromptSafetyInputGuardrail()) // 添加输入内容安全过滤
+						.outputGuardrails(new RetryOutputGuardrail()) // 添加输出内容重试过滤
 						.build();
 			}
 			default -> throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的代码生成类型");

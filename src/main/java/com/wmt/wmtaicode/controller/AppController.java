@@ -20,6 +20,8 @@ import com.wmt.wmtaicode.model.entity.App;
 import com.wmt.wmtaicode.model.enums.MessageTypeEnum;
 import com.wmt.wmtaicode.model.vo.AppVO;
 import com.wmt.wmtaicode.model.vo.UserVO;
+import com.wmt.wmtaicode.ratelimiter.annotation.RateLimit;
+import com.wmt.wmtaicode.ratelimiter.enums.RateLimitType;
 import com.wmt.wmtaicode.service.*;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -292,6 +294,7 @@ public class AppController {
 	 * @return 代码生成结果的Flux流
 	 */
 	@GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	@RateLimit(limitType = RateLimitType.USER, rate = 5, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
 	public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam("appId") Long appId,
 													   @RequestParam("message") String message,
 													   HttpServletRequest request) {
