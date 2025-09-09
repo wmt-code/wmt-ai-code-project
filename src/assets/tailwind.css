@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800;
+  }
+}
+
+@layer utilities {
+  .container-1200 {
+    @apply max-w-[1200px] mx-auto px-4;
+  }
+  .h-42px {
+    height: 42px;
+  }
+  .w-42px {
+    width: 42px;
+  }
+  .contain-layout-style {
+    contain: layout style;
+  }
+  .grid-auto-320 {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  .hero-gradient {
+    background: linear-gradient(
+      180deg,
+      rgba(241, 245, 249, 0) 0%,
+      rgba(190, 227, 248, 0.6) 35%,
+      rgba(147, 197, 253, 0.6) 60%,
+      rgba(99, 102, 241, 0.6) 100%
+    );
+  }
+  .noise-overlay {
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.035) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .soft-card {
+    @apply bg-white/90 backdrop-blur rounded-2xl shadow-md;
+  }
+  /* 输入框与按钮样式 */
+  .input-soft {
+    @apply rounded-3xl bg-white/95 backdrop-blur border border-white/70 shadow-lg ring-1 ring-black/5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200/70 transition;
+    box-shadow: 0 6px 20px rgba(2, 6, 23, 0.08);
+  }
+  .send-circle-btn {
+    @apply rounded-full h-10 w-10 flex items-center justify-center shadow-md text-white transition transform;
+    background: linear-gradient(135deg, #60a5fa 0%, #8b5cf6 100%);
+  }
+  .send-circle-btn:hover {
+    box-shadow: 0 10px 22px rgba(2, 6, 23, 0.15);
+    transform: translateY(-1px);
+  }
+  /* 区块与卡片布局 */
+  .section-wrap {
+    margin-top: 1.5rem;
+  }
+  .section-title {
+    @apply text-2xl font-semibold mb-4 text-slate-800;
+  }
+  .grid-cards {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  .pager-wrap {
+    @apply flex justify-center mt-4;
+  }
+}

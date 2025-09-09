@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
@@ -13,6 +13,8 @@ const loginUserStore = useLoginUserStore()
 // 用户提示词
 const userPrompt = ref('')
 const creating = ref(false)
+const placeholderText = ref('使用 NIHILIST 创建—')
+let typewriterTimer: number | null = null
 
 // 我的应用数据
 const myApps = ref<API.AppVO[]>([])
@@ -135,334 +137,130 @@ const viewWork = (app: API.AppVO) => {
 onMounted(() => {
   loadMyApps()
   loadFeaturedApps()
+  startTypewriter()
 })
+
+onBeforeUnmount(() => {
+  if (typewriterTimer) {
+    window.clearInterval(typewriterTimer)
+    typewriterTimer = null
+  }
+})
+
+const startTypewriter = () => {
+  const words = ['使用 NIHILIST 创建—', '创建企业官网', '打造艺术电商网站', '生成数据分析平台']
+  let wordIndex = 0
+  let charIndex = 0
+  let direction: 'forward' | 'back' = 'forward'
+  const typingSpeed = 100
+  const pause = 1200
+
+  const tick = () => {
+    const current = words[wordIndex]
+    if (direction === 'forward') {
+      charIndex++
+      placeholderText.value = current.slice(0, charIndex)
+      if (charIndex === current.length) {
+        direction = 'back'
+        window.clearInterval(typewriterTimer as number)
+        window.setTimeout(() => {
+          typewriterTimer = window.setInterval(tick, typingSpeed) as unknown as number
+        }, pause)
+      }
+    } else {
+      charIndex--
+      placeholderText.value = current.slice(0, Math.max(1, charIndex))
+      if (charIndex <= 1) {
+        direction = 'forward'
+        wordIndex = (wordIndex + 1) % words.length
+      }
+    }
+  }
+  typewriterTimer = window.setInterval(tick, typingSpeed) as unknown as number
+}
 </script>
 
 <template>
-  <div id="homePage">
-    <div class="container">
+  <div id="homePage" class="min-h-screen w-full m-0 p-0 relative overflow-hidden">
+    <div class="absolute inset-0 hero-gradient"></div>
+    <div class="absolute inset-0 noise-overlay"></div>
+    <div class="container-1200 py-5 relative z-10 w-full box-border">
       <!-- 网站标题和描述 -->
-      <div class="hero-section">
-        <h1 class="hero-title">AI 应用生成平台</h1>
-        <p class="hero-description">一句话轻松创建网站应用</p>
+      <div class="text-center py-20 md:py-16 mb-7 text-slate-800 relative overflow-hidden">
+        <h1
+          class="text-5xl md:text-6xl font-bold mb-5 leading-tight bg-gradient-to-tr from-blue-500 via-violet-500 to-emerald-500 bg-clip-text text-transparent tracking-tight relative z-10">
+          AI 应用生成平台
+        </h1>
+        <p class="text-base md:text-lg m-0 opacity-80 text-slate-500 relative z-10">一句话轻松创建网站应用</p>
       </div>
 
       <!-- 用户提示词输入框 -->
-      <div class="input-section">
-        <a-textarea
-          v-model:value="userPrompt"
-          placeholder="帮我创建个人博客网站"
-          :rows="4"
-          :maxlength="1000"
-          class="prompt-input"
-        />
-        <div class="input-actions">
-          <a-button type="primary" size="large" @click="createApp" :loading="creating">
-            <template #icon>
-              <span>↑</span>
-            </template>
-          </a-button>
+      <div class="relative mx-auto mb-6 max-w-[800px]">
+        <a-textarea v-model:value="userPrompt" :placeholder="placeholderText" :rows="4" :maxlength="1000"
+          class="input-soft text-base p-5 pr-16 focus:shadow-xl transition-shadow" />
+        <div class="absolute bottom-3 right-3 flex gap-2 items-center">
+          <button class="send-circle-btn" @click="createApp">
+            <span class="inline-block">↑</span>
+          </button>
         </div>
       </div>
 
       <!-- 快捷按钮 -->
-      <div class="quick-actions">
-        <a-button
-          type="default"
-          @click="
-            setPrompt(
-              '创建一个现代化的个人博客网站，包含文章列表、详情页、分类标签、搜索功能、评论系统和个人简介页面。采用简洁的设计风格，支持响应式布局，文章支持Markdown格式，首页展示最新文章和热门推荐。',
-            )
+      <div class="flex gap-3 justify-center mb-12 flex-wrap">
+        <a-button type="default" @click="
+          setPrompt(
+            '创建一个现代化的个人博客网站，包含文章列表、详情页、分类标签、搜索功能、评论系统和个人简介页面。采用简洁的设计风格，支持响应式布局，文章支持Markdown格式，首页展示最新文章和热门推荐。',
+          )
           "
-          >个人博客网站</a-button
-        >
-        <a-button
-          type="default"
-          @click="
-            setPrompt(
-              '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面。采用商务风格的设计，包含轮播图、产品展示卡片、团队介绍、客户案例展示，支持多语言切换和在线客服功能。',
-            )
+          class="rounded-[25px] px-5 py-2 h-auto bg-white/80 border border-blue-500/20 text-slate-600 hover:bg-white/90 hover:border-blue-500/40 hover:text-blue-500 transition-all hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(59,130,246,0.15)]">个人博客网站</a-button>
+        <a-button type="default" @click="
+          setPrompt(
+            '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面。采用商务风格的设计，包含轮播图、产品展示卡片、团队介绍、客户案例展示，支持多语言切换和在线客服功能。',
+          )
           "
-          >企业官网</a-button
-        >
-        <a-button
-          type="default"
-          @click="
-            setPrompt(
-              '构建一个功能完整的在线商城，包含商品展示、购物车、用户注册登录、订单管理、支付结算等功能。设计现代化的商品卡片布局，支持商品搜索筛选、用户评价、优惠券系统和会员积分功能。',
-            )
+          class="rounded-[25px] px-5 py-2 h-auto bg-white/80 border border-blue-500/20 text-slate-600 hover:bg-white/90 hover:border-blue-500/40 hover:text-blue-500 transition-all hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(59,130,246,0.15)]">企业官网</a-button>
+        <a-button type="default" @click="
+          setPrompt(
+            '构建一个功能完整的在线商城，包含商品展示、购物车、用户注册登录、订单管理、支付结算等功能。设计现代化的商品卡片布局，支持商品搜索筛选、用户评价、优惠券系统和会员积分功能。',
+          )
           "
-          >在线商城</a-button
-        >
-        <a-button
-          type="default"
-          @click="
-            setPrompt(
-              '制作一个精美的作品展示网站，适合设计师、摄影师、艺术家等创作者。包含作品画廊、项目详情页、个人简历、联系方式等模块。采用瀑布流或网格布局展示作品，支持图片放大预览和作品分类筛选。',
-            )
+          class="rounded-[25px] px-5 py-2 h-auto bg-white/80 border border-blue-500/20 text-slate-600 hover:bg-white/90 hover:border-blue-500/40 hover:text-blue-500 transition-all hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(59,130,246,0.15)]">在线商城</a-button>
+        <a-button type="default" @click="
+          setPrompt(
+            '制作一个精美的作品展示网站，适合设计师、摄影师、艺术家等创作者。包含作品画廊、项目详情页、个人简历、联系方式等模块。采用瀑布流或网格布局展示作品，支持图片放大预览和作品分类筛选。',
+          )
           "
-          >作品展示网站</a-button
-        >
+          class="rounded-[25px] px-5 py-2 h-auto bg-white/80 border border-blue-500/20 text-slate-600 hover:bg-white/90 hover:border-blue-500/40 hover:text-blue-500 transition-all hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(59,130,246,0.15)]">作品展示网站</a-button>
       </div>
 
       <!-- 我的作品 -->
-      <div class="section">
+      <div class="section-wrap">
         <h2 class="section-title">我的作品</h2>
-        <div class="app-grid">
-          <AppCard
-            v-for="app in myApps"
-            :key="app.id"
-            :app="app"
-            @view-chat="viewChat"
-            @view-work="viewWork"
-          />
+        <div class="grid-cards contain-layout-style">
+          <AppCard v-for="app in myApps" :key="app.id" :app="app" @view-chat="viewChat" @view-work="viewWork" />
         </div>
-        <div class="pagination-wrapper">
-          <a-pagination
-            v-model:current="myAppsPage.current"
-            v-model:page-size="myAppsPage.pageSize"
-            :total="myAppsPage.total"
-            :show-size-changer="false"
-            :show-total="(total: number) => `共 ${total} 个应用`"
-            @change="loadMyApps"
-          />
+        <div class="pager-wrap">
+          <a-pagination v-model:current="myAppsPage.current" v-model:page-size="myAppsPage.pageSize"
+            :total="myAppsPage.total" :show-size-changer="false" :show-total="(total) => `共 ${total} 个应用`"
+            @change="loadMyApps" />
         </div>
       </div>
 
       <!-- 精选案例 -->
-      <div class="section">
+      <div class="section-wrap">
         <h2 class="section-title">精选案例</h2>
-        <div class="featured-grid">
-          <AppCard
-            v-for="app in featuredApps"
-            :key="app.id"
-            :app="app"
-            :featured="true"
-            @view-chat="viewChat"
-            @view-work="viewWork"
-          />
+        <div class="grid-cards contain-layout-style">
+          <AppCard v-for="app in featuredApps" :key="app.id" :app="app" :featured="true" @view-chat="viewChat"
+            @view-work="viewWork" />
         </div>
-        <div class="pagination-wrapper">
-          <a-pagination
-            v-model:current="featuredAppsPage.current"
-            v-model:page-size="featuredAppsPage.pageSize"
-            :total="featuredAppsPage.total"
-            :show-size-changer="false"
-            :show-total="(total: number) => `共 ${total} 个案例`"
-            @change="loadFeaturedApps"
-          />
+        <div class="pager-wrap">
+          <a-pagination v-model:current="featuredAppsPage.current" v-model:page-size="featuredAppsPage.pageSize"
+            :total="featuredAppsPage.total" :show-size-changer="false" :show-total="(total) => `共 ${total} 个案例`"
+            @change="loadFeaturedApps" />
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-#homePage {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 8%, #e2e8f0 20%, #cbd5e1 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 简化背景效果，使用静态渐变 */
-#homePage::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image:
-    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* 移除居中光束效果 */
-
-/* 英雄区域 */
-.hero-section {
-  text-align: center;
-  padding: 80px 0 60px;
-  margin-bottom: 28px;
-  color: #1e293b;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(ellipse 800px 400px at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-  opacity: 0.7;
-}
-
-@keyframes rotate {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-.hero-title {
-  font-size: 56px;
-  font-weight: 700;
-  margin: 0 0 20px;
-  line-height: 1.2;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #10b981 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -1px;
-  position: relative;
-  z-index: 2;
-}
-
-.hero-description {
-  font-size: 20px;
-  margin: 0;
-  opacity: 0.8;
-  color: #64748b;
-  position: relative;
-  z-index: 2;
-}
-
-/* 输入区域 */
-.input-section {
-  position: relative;
-  margin: 0 auto 24px;
-  max-width: 800px;
-}
-
-.prompt-input {
-  border-radius: 16px;
-  border: none;
-  font-size: 16px;
-  padding: 20px 60px 20px 20px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-}
-
-.prompt-input:focus {
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  outline: none;
-}
-
-.input-actions {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-/* 快捷按钮 */
-.quick-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 60px;
-  flex-wrap: wrap;
-}
-
-.quick-actions .ant-btn {
-  border-radius: 25px;
-  padding: 8px 20px;
-  height: auto;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #475569;
-  transition: all 0.15s ease;
-}
-
-.quick-actions .ant-btn:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #3b82f6;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-/* 区域标题 */
-.section {
-  margin-bottom: 60px;
-}
-
-.section-title {
-  font-size: 32px;
-  font-weight: 600;
-  margin-bottom: 32px;
-  color: #1e293b;
-}
-
-/* 我的作品网格 */
-.app-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-  contain: layout style;
-}
-
-/* 精选案例网格 */
-.featured-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-  contain: layout style;
-}
-
-/* 分页 */
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 32px;
-  }
-
-  .hero-description {
-    font-size: 16px;
-  }
-
-  .app-grid,
-  .featured-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions {
-    justify-content: center;
-  }
-}
-</style>
+<style scoped></style>

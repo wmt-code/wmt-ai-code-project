@@ -1,35 +1,34 @@
 <template>
-  <a-layout-header class="global-header">
-    <div class="header-content">
+  <a-layout-header
+    class="sticky top-0 z-[1000] h-16 leading-[64px] shadow-md bg-gradient-to-br from-slate-300 to-violet-300 p-0">
+    <div class="flex items-center justify-between container-1200 h-full">
       <div class="header-left">
         <router-link to="/">
-          <div class="logo-container">
-            <img src="@/assets/logo.webp" alt="Logo" class="logo" @error="handleLogoError" />
-            <span class="site-title">WMT AI 零代码平台</span>
+          <div class="flex items-center">
+            <img src="@/assets/logo.webp" alt="Logo" class="h-42px w-42px mr-3 rounded object-contain"
+              @error="handleLogoError" />
+            <span class="text-white text-[18px] font-semibold whitespace-nowrap">WMT AI 零代码平台</span>
           </div>
         </router-link>
       </div>
-      <a-menu
-        v-model:selectedKeys="selectedKeys"
-        mode="horizontal"
-        theme="dark"
-        class="navigation-menu"
-        :items="menuItems"
-        @click="handleMenuClick"
-      />
-      <div class="header-right">
+      <a-menu v-model:selectedKeys="selectedKeys" mode="horizontal" theme="dark"
+        class="flex-1 border-b-0 bg-transparent !m-0 md:!mx-12 hidden md:block" :items="menuItems"
+        @click="handleMenuClick" />
+      <div class="flex items-center">
         <template v-if="loginUserStore.loginUser.id">
           <a-dropdown :trigger="['hover']" placement="bottomRight">
-            <div class="user-avatar-wrapper">
-              <a-avatar :src="loginUserStore.loginUser.userAvatar" :size="36" class="user-avatar">
+            <div
+              class="flex items-center cursor-pointer px-3 py-2 rounded-[20px] hover:bg-white/20 ml-4 transition-colors">
+              <a-avatar :src="loginUserStore.loginUser.userAvatar" :size="36"
+                class="mr-2 bg-blue-500 text-white border-2 border-white/30">
                 <template v-if="!loginUserStore.loginUser.userAvatar">
                   {{ getAvatarText() }}
                 </template>
               </a-avatar>
-              <span class="username">{{
+              <span class="mr-2 font-medium text-white text-sm">{{
                 loginUserStore.loginUser.userName || loginUserStore.loginUser.userAccount
-              }}</span>
-              <DownOutlined class="dropdown-icon" />
+                }}</span>
+              <DownOutlined class="text-xs text-white" />
             </div>
             <template #overlay>
               <a-menu>
@@ -95,7 +94,9 @@ const originItems = [
 // 过滤菜单项
 const filterMenus = (menus = [] as MenuProps['items']) => {
   return menus?.filter((menu) => {
-    if (menu.key.startsWith('/admin')) {
+    if (!menu || typeof menu !== 'object') return false
+    const key = String((menu as any).key ?? '')
+    if (key.startsWith('/admin')) {
       const loginUser = loginUserStore.loginUser
       if (!loginUser || loginUser.userRole !== 'admin') {
         return false
@@ -149,133 +150,4 @@ router.afterEach((to) => {
 })
 </script>
 
-<style scoped>
-.global-header {
-  background: linear-gradient(135deg, #b6bacc 0%, #a186bd 100%);
-  padding: 0;
-  height: 64px;
-  line-height: 64px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 100%;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 42px;
-  width: 42px;
-  margin-right: 12px;
-  border-radius: 4px;
-  object-fit: contain;
-}
-
-.site-title {
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.navigation-menu {
-  flex: 1;
-  border-bottom: none;
-  background: transparent !important;
-  margin: 0 48px;
-}
-
-.navigation-menu :deep(.ant-menu) {
-  background: transparent !important;
-}
-
-.navigation-menu :deep(.ant-menu-dark) {
-  background: transparent !important;
-}
-
-.navigation-menu :deep(.ant-menu-item) {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.navigation-menu :deep(.ant-menu-item:hover) {
-  color: #fff !important;
-}
-
-.navigation-menu :deep(.ant-menu-item-selected) {
-  color: #fff !important;
-  background-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-}
-
-.user-avatar-wrapper {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 20px;
-  transition: background-color 0.3s;
-  margin-left: 16px;
-}
-.user-avatar-wrapper:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.user-avatar {
-  margin-right: 8px;
-  background-color: #1890ff;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.username {
-  margin-right: 8px;
-  font-weight: 500;
-  color: #fff;
-  font-size: 14px;
-}
-
-.dropdown-icon {
-  font-size: 12px;
-  color: #fff;
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    padding: 0 16px;
-  }
-
-  .logo-container {
-    margin-right: 24px;
-  }
-
-  .site-title {
-    font-size: 16px;
-  }
-
-  .navigation-menu {
-    display: none;
-  }
-}
-</style>
+<style scoped></style>
