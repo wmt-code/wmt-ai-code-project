@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, onBeforeUnmount } from 'vue'
+import { onMounted, reactive, ref, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
@@ -12,6 +12,7 @@ const loginUserStore = useLoginUserStore()
 
 // 用户提示词
 const userPrompt = ref('')
+const editorRef = ref<HTMLElement | null>(null)
 const creating = ref(false)
 const placeholderText = ref('使用 NIHILIST 创建—')
 let typewriterTimer: number | null = null
@@ -35,6 +36,11 @@ const featuredAppsPage = reactive({
 // 设置提示词
 const setPrompt = (prompt: string) => {
   userPrompt.value = prompt
+  nextTick(() => {
+    if (editorRef.value) {
+      editorRef.value.innerText = prompt
+    }
+  })
 }
 
 // 优化提示词功能已移除
@@ -178,6 +184,21 @@ const startTypewriter = () => {
   }
   typewriterTimer = window.setInterval(tick, typingSpeed) as unknown as number
 }
+
+// 外部修改 userPrompt 时，同步到可编辑区域
+watch(userPrompt, (val) => {
+  if (editorRef.value && editorRef.value.innerText !== val) {
+    editorRef.value.innerText = val
+  }
+})
+
+// 编辑器按键：Ctrl+Enter 提交
+const onEditorKeydown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.keyCode === 13)) {
+    e.preventDefault()
+    createApp()
+  }
+}
 </script>
 
 <template>
@@ -194,14 +215,14 @@ const startTypewriter = () => {
         <p class="text-base md:text-lg m-0 opacity-80 text-slate-500 relative z-10">一句话轻松创建网站应用</p>
       </div>
 
-      <!-- 用户提示词输入框 -->
-      <div class="relative mx-auto mb-6 max-w-[800px]">
-        <a-textarea v-model:value="userPrompt" :placeholder="placeholderText" :rows="4" :maxlength="1000"
-          class="input-soft text-base p-5 pr-16 focus:shadow-xl transition-shadow" />
+      <!-- 用户提示卡片编辑器（保持原功能） -->
+      <div class="relative mx-auto mb-6 max-w-[800px] prompt-surface">
+        <div class="prompt-editor" contenteditable="true" :data-empty="!userPrompt" ref="editorRef"
+          @input="(e: any) => { userPrompt = (e.target.innerText || '').slice(0, 1000) }" @keydown="onEditorKeydown">
+        </div>
+        <span v-if="!userPrompt" class="prompt-placeholder">{{ placeholderText }}</span>
         <div class="absolute bottom-3 right-3 flex gap-2 items-center">
-          <button class="send-circle-btn" @click="createApp">
-            <span class="inline-block">↑</span>
-          </button>
+          <button class="btn-primary" @click="createApp">开始创建</button>
         </div>
       </div>
 

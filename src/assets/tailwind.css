@@ -74,4 +74,23 @@
   .pager-wrap {
     @apply flex justify-center mt-4;
   }
+  /* 主页提示卡片编辑器 */
+  .prompt-surface {
+    @apply rounded-3xl bg-white/90 backdrop-blur border border-white/70 shadow-lg ring-1 ring-black/5 relative;
+  }
+  .prompt-editor {
+    @apply text-base leading-relaxed p-5 pr-16 min-h-[120px] outline-none;
+  }
+  .prompt-placeholder {
+    @apply absolute left-5 top-5 text-slate-400 pointer-events-none select-none;
+  }
+  /* 新按钮样式（蓝色胶囊） */
+  .btn-primary {
+    @apply inline-flex items-center justify-center h-10 px-5 rounded-full text-white shadow-md transition;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
+  }
 }
