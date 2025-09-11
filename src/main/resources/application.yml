@@ -1,0 +1,100 @@
+spring:
+    profiles:
+        active: prod
+    data:
+        redis:
+            password: [REDIS_PASSWORD]
+            host: [REDIS_HOST]
+            port: [REDIS_PORT]
+            ttl: 3600
+            database: 0
+    application:
+        name: wmt-ai-code
+    datasource:
+        url: jdbc:mysql://[DB_HOST]:[DB_PORT]/ai_code
+        username: [DB_USERNAME]
+        password: [DB_PASSWORD]
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+            minimum-idle: 10
+            maximum-pool-size: 20
+            connection-timeout: 30000
+            idle-timeout: 600000
+            max-lifetime: 1800000
+    session:
+        redis:
+            namespace: ai-code:session
+            flush-mode: on_save
+        timeout: 2592000
+    servlet:
+        multipart:
+            max-file-size: 10MB
+server:
+    port: 8081
+    servlet:
+        context-path: /api
+        session:
+            cookie:
+                max-age: 2592000
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+        tags-sorter: alpha
+        operations-sorter: alpha
+    api-docs:
+        path: /v3/api-docs
+    group-configs:
+        -   group: 'default'
+            paths-to-match: '/**'
+            packages-to-scan: com.wmt.wmtaicode.controller
+knife4j:
+    enable: true
+    setting:
+        language: zh_cn
+cos:
+    client:
+        host: [COS_HOST]
+        secretId: [COS_SECRET_ID]
+        secretKey: [COS_SECRET_KEY]
+        region: ap-guangzhou
+        bucket: storage-1329161178
+# AI
+langchain4j:
+    open-ai:
+        chat-model:
+            base-url: https://api.deepseek.com
+            api-key: {apiKey}
+            model-name: deepseek-chat
+            log-requests: true
+            log-responses: true
+            max-tokens: 8192
+        streaming-chat-model:
+            base-url: https://api.deepseek.com
+            api-key: {apiKey}
+            model-name: deepseek-chat
+            log-requests: true
+            log-responses: true
+            max-tokens: 8192
+            #response-format: json_object
+        # 推理 AI 模型配置（用于复杂的推理任务）
+        reasoning-streaming-chat-model:
+            base-url: https://api.deepseek.com
+            api-key: {apiKey}
+            model-name: deepseek-reasoner
+            max-tokens: 32768
+            temperature: 0.1
+            log-requests: true
+            log-responses: true
+        # 智能路由 AI 模型配置（用于简单的分类任务）
+        routing-chat-model:
+            base-url: https://api.deepseek.com
+            api-key: {apiKey}
+            model-name: deepseek-chat
+            log-requests: true
+            log-responses: true
+pexels:
+    api-key: {apiKey}
+# 阿里云 DashScope 配置
+dashscope:
+    api-key: {apiKey}
+    image-model: qwen-image
