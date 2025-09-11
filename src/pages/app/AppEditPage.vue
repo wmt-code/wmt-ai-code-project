@@ -228,6 +228,7 @@ const handleSubmit = async () => {
       res = await updateApp({
         id: appInfo.value.id,
         appName: formData.appName,
+        cover: formData.cover,
       })
     }
 
