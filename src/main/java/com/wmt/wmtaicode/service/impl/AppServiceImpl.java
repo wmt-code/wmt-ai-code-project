@@ -34,6 +34,7 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -55,6 +56,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
+	@Value("${app.deploy.host}")
+	private String deployHost;
 	@Resource
 	private UserService userService;
 	@Resource
@@ -85,7 +88,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		// 截取前12个字符作为应用名称
 		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
 		// ai自动识别用户提示词生成类型
-		AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService = aiCodeGenTypeRoutingFactory.createAiCodeGenTypeRoutingService();
+		AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService =
+				aiCodeGenTypeRoutingFactory.createAiCodeGenTypeRoutingService();
 		CodeGenTypeEnum codeGenTypeEnum = aiCodeGenTypeRoutingService.codeGenTypeRouting(initPrompt);
 		app.setCodeGenType(codeGenTypeEnum.getValue());
 		boolean save = this.save(app);
@@ -224,7 +228,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		boolean res = this.updateById(updateApp);
 		ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "应用部署失败");
 		// 异步更新应用封面
-		String deployUrl = String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+		String deployUrl = String.format("%s/%s", deployHost, deployKey);
 		generateAndUploadScreenshotAsync(appId, deployUrl);
 		return deployUrl;
 	}
