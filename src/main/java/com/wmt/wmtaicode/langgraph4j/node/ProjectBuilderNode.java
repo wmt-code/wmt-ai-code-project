@@ -1,6 +1,6 @@
 package com.wmt.wmtaicode.langgraph4j.node;
 
-import com.wmt.wmtaicode.core.builder.VueProjectBuilder;
+import com.wmt.wmtaicode.ai.core.builder.VueProjectBuilder;
 import com.wmt.wmtaicode.exception.BusinessException;
 import com.wmt.wmtaicode.exception.ErrorCode;
 import com.wmt.wmtaicode.langgraph4j.state.WorkflowContext;

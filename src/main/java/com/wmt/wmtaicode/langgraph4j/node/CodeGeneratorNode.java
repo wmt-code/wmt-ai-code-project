@@ -2,7 +2,7 @@ package com.wmt.wmtaicode.langgraph4j.node;
 
 import com.wmt.wmtaicode.ai.model.enums.CodeGenTypeEnum;
 import com.wmt.wmtaicode.constant.AppConstant;
-import com.wmt.wmtaicode.core.AiCodeGeneratorFacade;
+import com.wmt.wmtaicode.ai.core.AiCodeGeneratorFacade;
 import com.wmt.wmtaicode.langgraph4j.model.QualityResult;
 import com.wmt.wmtaicode.langgraph4j.state.WorkflowContext;
 import com.wmt.wmtaicode.utils.SpringContextUtil;
